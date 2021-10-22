@@ -1,0 +1,17 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "SidCodeBuildAccess",
+        "Action": [
+            "codebuild:*",
+            "s3:GetBucketLocation",
+            "s3:ListAllMyBuckets",
+            "secretsmanager:GetSecretValue",
+            "kms:Decrypt"
+        ],
+        "Effect": "Allow",
+        "Resource": "*"
+      }
+    ]
+  }

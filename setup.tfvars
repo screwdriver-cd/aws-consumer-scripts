@@ -1,0 +1,9 @@
+aws_region="us-west-2"
+tf_backend_bucket="sd-aws-consumer-tf-backend-123"
+sd_broker_endpointsvc_map={"b1" : [],"b1" : [],"b1" : []}
+sd_broker_endpointsvc_port=9096
+route53_zone_name=null
+consumer_fn_name="screwdriver-consumer-svc"
+vpc_id=null
+private_subnets=["10.10.106.0/25", "10.10.106.128/25", "10.10.107.0/25", "10.10.107.128/25"]
+sd_broker_secret_arn=null
