@@ -32,7 +32,7 @@ The followings are the external dependencies required to run this onboarding scr
 All of these tools can be installed via Homebrew on Mac OS X.
 
 ## Prerequisite
-To start using Screwdriver on your AWS account with integration mode, please reach out to the Screwdriver Team and get the list of broker endpoints and the corresponding route53 zone name. Also a Amazon Secret Manager secret needs to be created manually (for now), the values for which will be provided by Screwdriver Team. 
+To start using Screwdriver on your AWS account, please reach out to the Screwdriver Team and get the list of broker endpoints and the corresponding route53 zone name. Also a Amazon Secret Manager secret needs to be created manually (for now), the values for which will be provided by Screwdriver Team. 
 
 ## Instructions
 
