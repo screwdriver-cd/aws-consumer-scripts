@@ -85,7 +85,7 @@ The the number of resources in the infrastructure will be created based on the V
 
 #### Consumer Resources with Existing VPC
 
-For existing VPC and subnets, all we need are the resource ID of the VPC and the cird's of the private subnets. If using exisitng VPC it needs to have both private and public subnets as the resources will be created in private subnets. Also the private subnets should have access to the internet. Therefore, we highly recommend reviewing your existing VPC to see if it fits or a new one should be created instead. Additionally, you can update the other variables like vpc name and consumer function name.
+For existing VPC and subnets, all we need are the resource ID of the VPC and the cidr's of the private subnets. If using existing VPC it needs to have both private and public subnets as the resources will be created in private subnets. Also the private subnets should have outbound access to the internet. Therefore, we highly recommend reviewing your existing VPC to see if it fits or a new one should be created instead. Additionally, you can update the other variables like vpc name and consumer function name.
 
 Example configuration for exiting vpc:
 ```yaml
@@ -121,25 +121,8 @@ sd_broker_secret_arn=arn:someexamplesecret
 ## Configurations
 
 The config variables are all part of tfvar file. These variables will be used in creating the resources.
-### Provider config vars
-```aws_region="us-west-2"
-tf_backend_bucket="sd-aws-consumer-tf-backend-<accountid>" #replace accountid
-```
-### Broker endpoint configuration will be provided by Screwdriver Team
-```sd_broker_endpointsvc_map={"b1":[],"b2":[],"b3" : []}
-sd_broker_endpointsvc_port=9096
-route53_zone_name=null
-consumer_fn_name="screwdriver-consumer-svc"
-```
-### User config for VPC (existing or new)
-```
-vpc_id=null
-private_subnets=["10.10.106.0/25", "10.10.106.128/25", "10.10.107.0/25", "10.10.107.128/25"]
-cidr_block="10.10.104.0/22"
-public_subnets=["10.10.104.0/25", "10.10.104.128/25", "10.10.105.0/25", "10.10.105.128/25"]
-azs=["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
-vpc_name="screwdriver-consumer"
-```
+
+
 ### Config Definitions
 
 The following table describes all the configurable variables defined in `setup.tfvars`
@@ -162,3 +145,23 @@ The following table describes all the configurable variables defined in `setup.t
 <i><sup>*</sup> required config</i>
 
 <i><sup>#</sup> required config when creating new vpc</i>
+
+### Provider config vars
+```aws_region="us-west-2"
+tf_backend_bucket="sd-aws-consumer-tf-backend-<accountId>" #replace accountId
+```
+### Broker endpoint configuration will be provided by Screwdriver Team
+```sd_broker_endpointsvc_map={"b1":[],"b2":[],"b3" : []}
+sd_broker_endpointsvc_port=9096
+route53_zone_name=null
+consumer_fn_name="screwdriver-consumer-svc"
+```
+### User config for VPC (existing or new)
+```
+vpc_id=null
+private_subnets=["10.10.106.0/25", "10.10.106.128/25", "10.10.107.0/25", "10.10.107.128/25"]
+cidr_block="10.10.104.0/22"
+public_subnets=["10.10.104.0/25", "10.10.104.128/25", "10.10.105.0/25", "10.10.105.128/25"]
+azs=["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
+vpc_name="screwdriver-consumer"
+```

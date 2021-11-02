@@ -43,23 +43,6 @@ read_var_file() {
     return $dirtyfile
 }
 
-check_vpc_vars() {
-    if [ -e ./vpc.tfvars ];then
-        tfvarfile=$(cat ./vpc/vpc.tfvars)
-        read_var_file $tfvarfile
-        dirtyfile=$0
-        if [ "$dirtyfile" = 1 ];then
-            echo "Please fix vpc/vpc.tfvars to proceed!!" 
-            exit 1
-        fi
-        printf "===vpc varfile===\n"
-        echo $tfvarfile
-    else
-        echo "Please add file vpc.tfvars"
-        exit 1
-    fi
-}
-
 check_svc_vars() {
     if  [ -e ./setup.tfvars ]; then 
         tfvarfile=$(cat ./setup.tfvars)
