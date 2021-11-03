@@ -1,6 +1,5 @@
 variable "vpc_id" {}
 variable "subnets" { type = map(string)}
-variable "vpc_id" {}
 variable "tags" {}
 variable "broker_name" {}
 variable "route53_zone_name" {}

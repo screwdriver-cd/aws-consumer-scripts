@@ -1,25 +1,20 @@
-variable "aws_region" {}
-variable "tf_backend_bucket" {}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> v1.0.4"
+      version = "~> 3.0"
     }
   }
-  ## Comment if using a local back to safe tf state file
-  backend "s3" {
-    bucket = var.tf_backend_bucket
-    key    = "sdawscnsumr"
-    region = var.aws_region
-  }
-  ## Uncomment if using a local back to safe tf state file
+  ## UnComment if using a local back to safe tf state file
+  ## replace tf_backend_bucket and aws_region
+  # backend "s3" {
+  #   bucket = tf_backend_bucket
+  #   key    = "sdawscnsumr"
+  #   region = aws_region
+  # }
+  ## Uncomment if using a local backend to save tf state file
   # backend "local" {
   #   path = "relative/path/to/terraform.tfstate"
   # }
 }
+provider "aws" {}
