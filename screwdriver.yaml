@@ -15,5 +15,5 @@ jobs:
         - validate: |
             echo "Init using local backend"
             terraform init
-            echo "Check misconfiguration with trivy"
-            trivy conf --severity HIGH,CRITICAL . 
+            echo "Skip trivy check until this bug is fixed:https://github.com/aquasecurity/trivy/issues/1357"
+            # trivy conf --severity HIGH,CRITICAL . 
