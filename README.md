@@ -11,8 +11,8 @@ This repository is meant to serve as an install/uninstall/update script to provi
 - 1 AWS Lambda Kafka Event Source pointing to Alias Records
 - 1 Security Group For AWS Lambda and VPC Interface
 
-Additionally, if you opt for a new vpc creation, it will create all the required VPC infrastructure
-- 1 VPC based on the provided cidr block
+Additionally, if you opt for a new VPC creation, it will create all the required VPC infrastructure
+- 1 VPC based on the provided CIDR block
 - Private subnets
 - Public subnets
 - NAT Gateway
@@ -52,9 +52,9 @@ Next, to begin the infrastructure provisioning process:
 ./setup.sh 
 ```
 
-`./setup.sh` will first validate setup.tfvars for all variables and use default for the ones not found, it will then run terraform init, followed by plan and apply to provision infrastructure.
+`./setup.sh` will first validate **setup.tfvars** for all variables and use default for the ones not found, it will then run `terraform init`, followed by `plan` and `apply` to provision infrastructure.
 
-For step by step installation, you can use the following options
+For step by step installation, you can use the following options:
 ```sh
 # -i flag will run terraform init and verify backend infrastructure
 ./setup.sh -i
@@ -64,13 +64,13 @@ For step by step installation, you can use the following options
 ./setup.sh -a
 ```
 
-You can also run validation to check for errors before running plan and after running apply by using
-the -v flag
+You can also run validation to check for errors before running `plan` and after running `apply` by using
+the `-v` flag
 ```sh
 ./setup.sh -v
 ```
 
-Alternatively, to uninstall all infrastructure
+Alternatively, to uninstall all infrastructure:
 
 ```sh
 ./setup.sh -d
@@ -78,16 +78,16 @@ Alternatively, to uninstall all infrastructure
 
 ### Considerations for VPC setup
 
-The the number of resources in the infrastructure will be created based on the VPC configuration. There are 2 scenarios
+The the number of resources in the infrastructure will be created based on the VPC configuration. There are 2 scenarios:
 
 - [Consumer Resources with Existing VPC](#consumer-svc-with-existing-vpc)
 - [Consumer Resources with New VPC](#consumer-svc-with-new-vpc)
 
 #### Consumer Resources with Existing VPC
 
-For existing VPC and subnets, all we need are the resource ID of the VPC and the cidr's of the private subnets. If using existing VPC it needs to have both private and public subnets as the resources will be created in private subnets. Also the private subnets should have outbound access to the internet. Therefore, we highly recommend reviewing your existing VPC to see if it fits or a new one should be created instead. Additionally, you can update the other variables like vpc name and consumer function name.
+For existing VPC and subnets, all we need are the resource ID of the VPC and the CIDRs of the private subnets. If using existing VPC it needs to have both private and public subnets as the resources will be created in private subnets. Also the private subnets should have outbound access to the internet. Therefore, we highly recommend reviewing your existing VPC to see if it fits or a new one should be created instead. Additionally, you can update the other variables like VPC name and consumer function name.
 
-Example configuration for exiting vpc:
+Example configuration for an existing VPC:
 ```yaml
 aws_region="us-west-2"
 tf_backend_bucket="sd-aws-consumer-tf-backend-11111111"
@@ -101,9 +101,9 @@ sd_broker_secret_arn=arn:someexamplesecret
 ```
 #### Consumer Resources with New VPC
 
-In this case a VPC will be created and consumer svc will be provisioned in the new vpc. The required configuration needed for a new VPC setup are the VPC CIDR, the list of private and public subnet cidrs and the availability zones. The VPC CIDR prefix must be between `/16` and `/24`. Additionally, you can update the other variables like vpc name and consumer function name.
+In this case a VPC will be created and consumer service will be provisioned in the new VPC. The required configuration needed for a new VPC setup are the VPC CIDR, the list of private and public subnet CIDRs and the availability zones. The VPC CIDR prefix must be between `/16` and `/24`. Additionally, you can update the other variables like VPC name and consumer function name.
 
-Example configuration is new vpc:
+Example configuration for a new VPC:
 ```yaml
 aws_region="us-west-2"
 tf_backend_bucket="sd-aws-consumer-tf-backend-11111111"
@@ -135,16 +135,16 @@ The following table describes all the configurable variables defined in `setup.t
 | sd_broker_endpointsvc_port <sup>*</sup> | Integer | Screwdriver Broker Service Port |
 | route53_zone_name <sup>*</sup> | String | Route 53 Private Zone name  |
 | consumer_fn_name <sup>*</sup> | String | Screwdriver Consumer Service Name |
-| vpc_id <sup>*</sup> | String | User VPC Id  |
+| vpc_id <sup>*</sup> | String | User VPC ID  |
 | private_subnets <sup>*</sup> | List | List of private subnets |
 | public_subnets <sup>#</sup> | List | List of public subnets |
-| cidr_block <sup>#</sup> | String | CIDR block for the user vpc |
-| vpc_name <sup>#</sup> | String | Name of the user vpc |
+| cidr_block <sup>#</sup> | String | CIDR block for the user VPC |
+| vpc_name <sup>#</sup> | String | Name of the user VPC |
 | azs <sup>#</sup> | List | List of availability zones |
 
 <i><sup>*</sup> required config</i>
 
-<i><sup>#</sup> required config when creating new vpc</i>
+<i><sup>#</sup> required config when creating new VPC</i>
 
 ### Provider config vars
 ```aws_region="us-west-2"

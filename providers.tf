@@ -5,7 +5,7 @@ terraform {
       version = "~> 3.0"
     }
   }
-  ## UnComment if using a local back to safe tf state file
+  ## Uncomment if using a local backend to save tf state file
   ## replace tf_backend_bucket and aws_region
   # backend "s3" {
   #   bucket = tf_backend_bucket

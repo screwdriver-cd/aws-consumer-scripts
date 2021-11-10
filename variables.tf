@@ -1,11 +1,11 @@
 variable "vpc_id" {
   type        = string
-  description = "VPC id where conusmer function will be created"
+  description = "VPC ID where consumer function will be created"
   default = null
 }
 variable "sd_broker_endpointsvc_map" {
   type        = map(list(string))
-  description = "Map of list of sd broker name and endpoint service"
+  description = "Map of list of Screwdriver broker name and endpoint service"
   validation {
     condition = (
       length(var.sd_broker_endpointsvc_map[0]) != 2
