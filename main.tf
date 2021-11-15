@@ -111,6 +111,17 @@ module "endpoint_interface" {
   tags              = var.tags
 }
 
+module "build_artifact_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
+  bucket = var.consumer_bucket_name
+  acl    = "private"
+
+  versioning = {
+    enabled = false
+  }
+}
+
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
@@ -127,6 +138,10 @@ module "lambda_function" {
   lambda_timeout         = "300"
   role_arn               = aws_iam_role.sd_consumer_svc_role.role_arn
   tags                   = var.tags
+  environment_variables = {
+    "SD_SLS_BUILD_BUCKET" = "${module.build_artifact_bucket.s3_bucket_arn}"
+    "SD_SLS_BUILD_ENCRYPTION_KEY" = "${var.kms_key_arn}"
+  }
 }
 
 resource "aws_lambda_event_source_mapping" "sd_consumer_svc_event" {
@@ -167,5 +182,6 @@ resource "aws_lambda_permission" "allow_ssm" {
   action        = "lambda:InvokeFunction"
   function_name = module.lambda_function.name
   principal     = "secretsmanager.amazonaws.com"
+  source_arn    = module.lambda_function.arn
 }
 

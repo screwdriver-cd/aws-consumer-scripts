@@ -7,8 +7,14 @@
             "codebuild:*",
             "s3:GetBucketLocation",
             "s3:ListAllMyBuckets",
+            "s3:GetBucketAcl",
+            "s3:GetObject",
+            "s3:List*",
+            "s3:PutObject",
             "secretsmanager:GetSecretValue",
-            "kms:Decrypt"
+            "kms:Decrypt",
+            "logs:FilterLogEvents",
+            "logs:GetLogEvents"
         ],
         "Effect": "Allow",
         "Resource": "*"

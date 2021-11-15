@@ -32,6 +32,14 @@ variable "consumer_fn_name" {
   description = "Name of consumer function"
   default = "screwdriver-consumer-svc"
 }
+variable "consumer_bucket_name" {
+  type = string
+  description = "S3 Bucket name of the consumer build bucket"
+}
+variable "aws_region" {
+  type = string
+  description = "Region name for the AWS account"
+}
 variable "tags" {
   type = map(string)
   default = {
@@ -39,6 +47,10 @@ variable "tags" {
     ENVIRONMENT : "prod"
     SERVICE : "screwdriver/consumer"
   }
+}
+variable "kms_key_arn" {
+  type = string
+  description = "KMS key for build encryption"
 }
 
 // if create new vpc is true
