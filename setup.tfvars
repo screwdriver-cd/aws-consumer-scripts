@@ -7,3 +7,4 @@ consumer_fn_name="screwdriver-consumer-svc"
 vpc_id=null
 private_subnets=["10.10.106.0/25", "10.10.106.128/25", "10.10.107.0/25", "10.10.107.128/25"]
 sd_broker_secret_arn=null
+consumer_bucket_name="screwdriver-consumer-builds-11111111-usw2"

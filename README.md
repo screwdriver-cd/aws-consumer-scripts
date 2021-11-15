@@ -98,6 +98,7 @@ consumer_fn_name="screwdriver-consumer-svc"
 vpc_id="vpc-1234"
 private_subnets=["10.10.106.0/25", "10.10.106.128/25", "10.10.107.0/25", "10.10.107.128/25"]
 sd_broker_secret_arn=arn:someexamplesecret
+consumer_bucket_name="screwdriver-consumer-builds-11111111-usw2"
 ```
 #### Consumer Resources with New VPC
 
@@ -117,6 +118,7 @@ public_subnets=["10.10.104.0/25", "10.10.104.128/25", "10.10.105.0/25", "10.10.1
 azs=["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
 vpc_name="screwdriver-consumer"
 sd_broker_secret_arn=arn:someexamplesecret
+consumer_bucket_name="screwdriver-consumer-builds-11111111-usw2"
 ```
 ## Configurations
 
@@ -135,6 +137,7 @@ The following table describes all the configurable variables defined in `setup.t
 | sd_broker_endpointsvc_port <sup>*</sup> | Integer | Screwdriver Broker Service Port |
 | route53_zone_name <sup>*</sup> | String | Route 53 Private Zone name  |
 | consumer_fn_name <sup>*</sup> | String | Screwdriver Consumer Service Name |
+| consumer_bucket_name | String | Screwdriver Consumer Service Bucket Name |
 | vpc_id <sup>*</sup> | String | User VPC ID  |
 | private_subnets <sup>*</sup> | List | List of private subnets |
 | public_subnets <sup>#</sup> | List | List of public subnets |
@@ -155,6 +158,7 @@ tf_backend_bucket="sd-aws-consumer-tf-backend-<accountId>" #replace accountId
 sd_broker_endpointsvc_port=9096
 route53_zone_name=null
 consumer_fn_name="screwdriver-consumer-svc"
+consumer_bucket_name="screwdriver-consumer-builds-11111111-usw2"
 ```
 ### User config for VPC (existing or new)
 ```
