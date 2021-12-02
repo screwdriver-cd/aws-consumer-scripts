@@ -8,6 +8,7 @@ This repository is meant to serve as an install/uninstall/update script to provi
 - 1 AWS Route 53 Private Hosted Zone
 - 3 AWS Route 53 Alias Records for each VPC Endpoint Interface
 - 1 AWS Lambda as Screwdriver Consumer Service
+- 1 AWS S3 Bucket as Screwdriver Consumer Build Bucket
 - 1 AWS Lambda Kafka Event Source pointing to Alias Records
 - 1 Security Group For AWS Lambda and VPC Interface
 
