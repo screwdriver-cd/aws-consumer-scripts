@@ -33,11 +33,11 @@ The followings are the external dependencies required to run this onboarding scr
 All of these tools can be installed via Homebrew on Mac OS X.
 
 ## Prerequisite
-To start using Screwdriver on your AWS account, please reach out to the Screwdriver Team and get the list of broker endpoints and the corresponding route53 zone name. Also a Amazon Secret Manager secret needs to be created manually (for now), the values for which will be provided by Screwdriver Team. 
+To start using Screwdriver on your AWS account, please reach out to the Screwdriver Team and get the list of broker endpoints and the corresponding route53 zone name. Also a Amazon Secret Manager secret with rotation and KMS Key needs to be created separately, the values and scripts for which will be provided by Screwdriver Team.
 
 ## Instructions
 
-To get started, update the var file with the required details. Please refer to [`setup.tfvars`](./setup.tfvars) for the variables list.
+To get started, update the var file with the required details. Please refer to [`setup.tfvars.json.tmpl`](./setup.tfvars.json.tmpl) for the variables list. Rename file to `setup.tfvars.json`.
 
 Second, configure the AWS CLI by running `aws configure` with your AWS credentials and select profile for the desired account.
 ```
@@ -49,11 +49,11 @@ Next, to begin the infrastructure provisioning process:
 
 ### install
 ```sh
-# by default, setup.sh will try to find "setup.tfvars"
+# by default, setup.sh will try to find "setup.tfvars.json"
 ./setup.sh 
 ```
 
-`./setup.sh` will first validate **setup.tfvars** for all variables and use default for the ones not found, it will then run `terraform init`, followed by `plan` and `apply` to provision infrastructure.
+`./setup.sh` will first validate **setup.tfvars.json** for all variables and use default for the ones not found, it will then run `terraform init`, followed by `plan` and `apply` to provision infrastructure.
 
 For step by step installation, you can use the following options:
 ```sh
@@ -128,7 +128,7 @@ The config variables are all part of tfvar file. These variables will be used in
 
 ### Config Definitions
 
-The following table describes all the configurable variables defined in `setup.tfvars`
+The following table describes all the configurable variables defined in `setup.tfvars.json`
 
 | Name | Type | Description |
 | - | - | - |
@@ -145,6 +145,8 @@ The following table describes all the configurable variables defined in `setup.t
 | cidr_block <sup>#</sup> | String | CIDR block for the user VPC |
 | vpc_name <sup>#</sup> | String | Name of the user VPC |
 | azs <sup>#</sup> | List | List of availability zones |
+| kafka_topic <sup>*</sup> | String | Name of the kafka topic |
+| kms_key_arn <sup>*</sup> | String | The Key ID of the KMS Key |
 
 <i><sup>*</sup> required config</i>
 
@@ -155,11 +157,15 @@ The following table describes all the configurable variables defined in `setup.t
 tf_backend_bucket="sd-aws-consumer-tf-backend-<accountId>" #replace accountId
 ```
 ### Broker endpoint configuration will be provided by Screwdriver Team
-```sd_broker_endpointsvc_map={"b1":[],"b2":[],"b3" : []}
+```sd_broker_endpointsvc_map={
+    "us-west-2a": ["broker_1", "service_1"],
+    "us-west-2b": ["broker_2", "service_2"]
+}
 sd_broker_endpointsvc_port=9096
 route53_zone_name=null
 consumer_fn_name="screwdriver-consumer-svc"
 consumer_bucket_name="screwdriver-consumer-builds-11111111-usw2"
+kafka_topic="builds-11111111-usw2"
 ```
 ### User config for VPC (existing or new)
 ```
@@ -169,4 +175,5 @@ cidr_block="10.10.104.0/22"
 public_subnets=["10.10.104.0/25", "10.10.104.128/25", "10.10.105.0/25", "10.10.105.128/25"]
 azs=["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
 vpc_name="screwdriver-consumer"
+kms_key_arn="example-id"
 ```

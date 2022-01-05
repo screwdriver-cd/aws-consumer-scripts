@@ -1,32 +1,33 @@
 locals {
-  for_each         = var.sd_broker_endpointsvc_map
-  sd_kafka_brokers = concat(each[0])
-}
-locals {
-  create_vpc = var.vpc_id != null ? true : false
+  create_vpc = var.vpc_id == "" ? true : false
+  sd_kafka_brokers = [ for b in var.sd_broker_endpointsvc_map: b[0]]
 }
 
 data "aws_vpc" "selected" {
   count = local.create_vpc ? 0 : 1
+  id    = var.vpc_id
+}
 
-  id = var.vpc_id
-  private_subnets = var.private_subnets
+data "aws_subnet" "selected" {
+  for_each = local.create_vpc ? [] : toset(var.private_subnets)
+  vpc_id = var.vpc_id
+  cidr_block = each.value
 }
 
 locals {
   vpc = (
     local.create_vpc ?
     {
-      id         = module.vpc.vpc_id
-      cidr_block = module.vpc.cidr_block
+      id              = module.vpc.vpc_id
+      cidr_block      = module.vpc.vpc_cidr_block
       private_subnets = module.vpc.private_subnets
     } :
     {
-      id         = data.aws_vpc.selected.id
-      cidr_block = data.aws_vpc.selected.cidr_block
-      private_subnets = data.aws_vpc.selected.private_subnets
+      id              = data.aws_vpc.selected[0].id
+      cidr_block      = data.aws_vpc.selected[0].cidr_block
+      private_subnets = [for s in data.aws_subnet.selected : s.id]
     }
-  )
+  ) 
 }
 
 module "consumer_fn_sg" {
@@ -42,6 +43,7 @@ module "consumer_fn_sg" {
     },
   ]
 }
+
 resource "aws_route53_zone" "sdbrokerprivatezone" {
   name = var.route53_zone_name
   vpc {
@@ -100,14 +102,15 @@ resource "aws_iam_role_policy_attachment" "policy-attach3" {
 
 module "endpoint_interface" {
   for_each          = var.sd_broker_endpointsvc_map
-  depends_on        = [aws_route53_zone.sdbrokerprivatezone]
+  depends_on        = [module.consumer_fn_sg, aws_route53_zone.sdbrokerprivatezone]
   source            = "./modules/endpoint_interface"
-  broker_name       = each.value[0]
+  broker_name       = split(":", each.value[0])[0]
   endpt_svc_name    = each.value[1]
+  az_id             = each.key
   subnets           = local.vpc.private_subnets
   vpc_id            = local.vpc.id
   route53_zone_name = var.route53_zone_name
-  security_group_id = module.consumer_fn_sg.id
+  security_group_id = module.consumer_fn_sg.security_group_id
   tags              = var.tags
 }
 
@@ -130,13 +133,14 @@ module "lambda_function" {
   handler                = "index"
   runtime                = "go1.x"
   create_package         = true
-  source_path            = "./aws-consumer-service/"
+  create_role            = false
+  source_path            = "./lambda/"
   vpc_subnet_ids         = local.vpc.private_subnets
-  vpc_security_group_ids = [module.consumer_fn_sg.id]
+  vpc_security_group_ids = [module.consumer_fn_sg.security_group_id]
   memory_size            = "128"
-  concurrency            = "5"
-  lambda_timeout         = "300"
-  role_arn               = aws_iam_role.sd_consumer_svc_role.role_arn
+  reserved_concurrent_executions = 5
+  timeout                = 300
+  lambda_role            = aws_iam_role.sd_consumer_svc_role.arn
   tags                   = var.tags
   environment_variables = {
     "SD_SLS_BUILD_BUCKET" = "${module.build_artifact_bucket.s3_bucket_arn}"
@@ -146,13 +150,13 @@ module "lambda_function" {
 
 resource "aws_lambda_event_source_mapping" "sd_consumer_svc_event" {
   depends_on        = [module.lambda_function]
-  function_name     = module.lambda_function.arn
+  function_name     = module.lambda_function.lambda_function_arn
   topics            = [var.kafka_topic]
   starting_position = "TRIM_HORIZON"
 
   self_managed_event_source {
     endpoints = {
-      KAFKA_BOOTSTRAP_SERVERS = local.sd_kafka_brokers
+      KAFKA_BOOTSTRAP_SERVERS = join(",",local.sd_kafka_brokers)
     }
   }
   source_access_configuration {
@@ -169,7 +173,7 @@ resource "aws_lambda_event_source_mapping" "sd_consumer_svc_event" {
   }
   source_access_configuration {
     type = "VPC_SECURITY_GROUP"
-    uri  = "security_group:${module.consumer_fn_sg.id}"
+    uri  = "security_group:${module.consumer_fn_sg.security_group_id}"
   }
   source_access_configuration {
     type = "SASL_SCRAM_512_AUTH"
@@ -180,8 +184,7 @@ resource "aws_lambda_event_source_mapping" "sd_consumer_svc_event" {
 resource "aws_lambda_permission" "allow_ssm" {
   statement_id  = "AllowExecutionFromSecretsManager"
   action        = "lambda:InvokeFunction"
-  function_name = module.lambda_function.name
+  function_name = module.lambda_function.lambda_function_name
   principal     = "secretsmanager.amazonaws.com"
-  source_arn    = module.lambda_function.arn
+  source_arn    = module.lambda_function.lambda_function_arn
 }
-

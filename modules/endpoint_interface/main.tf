@@ -1,9 +1,21 @@
 variable "vpc_id" {}
-variable "subnets" { type = map(string)}
+variable "subnets" { type = list(string)}
 variable "tags" {}
 variable "broker_name" {}
 variable "route53_zone_name" {}
 variable "security_group_id" {}
+variable "endpt_svc_name" {}
+variable "az_id" {}
+
+
+data "aws_subnet" "privatesubnets" {
+  for_each = toset(var.subnets)
+  id       = each.value
+}
+
+locals {
+  subnet_az_mapping = { for id, subnet in data.aws_subnet.privatesubnets: format("%s", subnet.availability_zone) => id }
+}
 
 resource "aws_vpc_endpoint" "sd_brkr_service" {
   vpc_id            = var.vpc_id
@@ -12,8 +24,11 @@ resource "aws_vpc_endpoint" "sd_brkr_service" {
 
   security_group_ids = [ var.security_group_id ]
 
-  subnet_ids          = [var.subnets]
+  subnet_ids          = [lookup(local.subnet_az_mapping, var.az_id)]
   private_dns_enabled = false
+  tags = {
+    Name = "${var.broker_name}"
+  }
 }
 
 data "aws_route53_zone" "internal" {
@@ -24,7 +39,7 @@ data "aws_route53_zone" "internal" {
 
 resource "aws_route53_record" "sd_brkr_service_dns" {
   zone_id = data.aws_route53_zone.internal.zone_id
-  name    = "${var.broker_name}.${data.aws_route53_zone.internal.name}"
+  name    = var.broker_name
   type    = "A"
   alias {
     name                   = aws_vpc_endpoint.sd_brkr_service.dns_entry[0]["dns_name"]

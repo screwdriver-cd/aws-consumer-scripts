@@ -8,7 +8,7 @@ variable "sd_broker_endpointsvc_map" {
   description = "Map of list of Screwdriver broker name and endpoint service"
   validation {
     condition = (
-      length(var.sd_broker_endpointsvc_map[0]) != 2
+      length(var.sd_broker_endpointsvc_map) >= 2
     )
     error_message = "The broker endpoint-service map must be 2."
   }
@@ -22,7 +22,7 @@ variable "route53_zone_name" {
   description = "Name of route53 zone"
   validation {
     condition = (
-      var.route53_zone_name == null
+      var.route53_zone_name != ""
     )
     error_message = "The route53_zone_name cannot be null."
   }
@@ -67,7 +67,7 @@ variable "private_subnets" {
   type    = list(string)
   validation {
     condition = (
-      length(var.private_subnets) < 3
+      length(var.private_subnets) >= 2
     )
     error_message = "The private_subnets must be for each az."
   }
@@ -77,7 +77,7 @@ variable "public_subnets" {
   type    = list(string)
   validation {
     condition = (
-      length(var.public_subnets) < 3
+      length(var.public_subnets) >= 2
     )
     error_message = "The public_subnets must be for each az when creating new vpc."
   }
@@ -89,4 +89,9 @@ variable "vpc_name" {
 variable "sd_broker_secret_arn" {
   type    = string
   description = "ARN of the AWS SecretManager secret value"
+}
+
+variable "kafka_topic" {
+  type    = string
+  description = "The kafka topic name"
 }

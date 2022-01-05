@@ -1,12 +1,21 @@
 #!/bin/bash
 set -eo pipefail
-
 CWD=$(dirname ${BASH_SOURCE})
-declare destroy
-declare apply
-declare plan
-declare init
-declare validate
+
+declare TF_CMD
+declare TF_VAR_FILE_NAME="./setup.tfvars.json"
+
+function usage {
+    echo "usage: $programname [-ipavro]"
+    echo "  -i|--init     runs the init script"
+    echo "  -p|--plan     runs the infra plan and produces an output file producer_infra.tfplan"
+    echo "  -a|--apply    runs the apply script with the plan producer_infra.tfplan"
+    echo "  -v|--validate runs the validate script"
+    echo "  -r|--refresh  runs the refresh script"
+    echo "  -o|--output   returns the output"
+    echo "  -all|         runs all commands in sequence|for advanced usage"
+    exit 1
+}
 
 check_dependencies() {
     declare -r deps=(terraform aws wget)
@@ -28,34 +37,31 @@ check_dependencies() {
 }
 
 read_var_file() {
-    tfvarfile=$1
+    data=`echo $1 | \
+        jq '. | to_entries[]| select(.value | . == null or . == "") 
+        | if .value == "" then .value |= "\\"\\(.)\\"" else . end | "\\(.key): \\(.value)"'`
     local dirtyfile=0
-    for line in ${tfvarfile[@]}
-    do
-        [[ $line = \#* ]] && continue
-        key=`echo $line | awk -F'=' '{print $1}'`
-        val=`echo $line | awk -F'=' '{print $2}'`
-        if [ -z $val ];then
-            echo "Value for key:$key cannot be empty $val"
-            dirtyfile=1
-        fi        
-    done 
+    if [ ! -z "$data" ];then
+        echo "Will use empty key: $data"
+        dirtyfile=0
+    fi
     return $dirtyfile
 }
 
 check_svc_vars() {
-    if  [ -e ./setup.tfvars ]; then 
-        tfvarfile=$(cat ./setup.tfvars)
-        read_var_file $tfvarfile
+    if  [ -e $TF_VAR_FILE_NAME ]; then 
+        tfvarfile=$(cat $TF_VAR_FILE_NAME)
+        read_var_file "$tfvarfile"
         dirtyfile=$0
         if [ "$dirtyfile" = true ];then
-            echo "Please fix setup.tfvars to proceed!!" 
+            echo "Please fix env.tfvars.json to proceed!!" 
             exit 1
         fi
-        printf "===svc varfile===\n"
+        printf "===env varfile===\n"
         echo "${tfvarfile}"
+        printf "===end varfile===\n"
     else
-        echo "Please add file setup.tfvars"
+        echo "Please add file env.tfvars.json"
         exit 1
     fi
 }
@@ -63,74 +69,82 @@ check_svc_vars() {
 read_input() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -i|--init)
-                init="true"
+            -i|--init) 
+                TF_CMD="init"
                 shift 1
                 ;;
             -d|--destroy)
-                destroy="true"
+                TF_CMD="destroy"
                 shift 1
                 ;;
-            -p|--plan)
-                plan="true"
+            -p|--plan) 
+                TF_CMD="plan" 
                 shift 1
                 ;;
-            -a|--apply)
-                apply="true"
+            -a|--apply) 
+                TF_CMD="apply" 
+                shift 1
+                ;;
+            -r|--refresh) 
+                TF_CMD="refresh" 
                 shift 1
                 ;;
             -v|--validate)
-                validate="true"
-                shift 1
+                TF_CMD="validate"
+                shift 1 
                 ;;
+            -all)
+                TF_CMD="all"
+                shift 1 
+                ;;
+            -o|--output)
+                TF_CMD="output"
+                shift 1 
+                ;;
+            [?])
+                usage
+                exit 1
         esac
     done
 }
 
 run_tf_cmd() {
-    tfplanoutputfile=$1
-    tfvarfile=$2
-    local output
-    if [ "$destroy" = true ];then
-        echo "===Runnning uninstall script==="
-        terraform destroy  -auto-approve -var-file=$tfvarfile $tfplanoutputfile
-    elif [ "$validate" = true ];then
-        echo "===Runnning terraform validate script only==="
-        terraform validate
-    elif [ "$init" = true ];then
-        echo "===Runnning terraform init script only==="
-        terraform init -var-file=$tfvarfile
-    elif [ "$plan" = true ];then
-        echo "===Runnning terraform plan script only==="
-        terraform plan -var-file=$tfvarfile
-    elif [ "$apply" = true ];then
-        echo "===Runnning terraform apply script only==="
-        terraform refresh
-        terraform apply  -auto-approve -var-file=$tfvarfile
-    else
-        echo "Runnning install script"
-        terraform init
-        # # plan and apply
-        terraform plan -var-file=$tfvarfile -out $tfplanoutputfile
-        terraform apply -auto-approve -var-file=$tfvarfile $tfplanoutputfile
-    fi
+    tfvarfile=$1
+    tfplanoutputfile=$2
+    echo "===Runnning terraform $TF_CMD script==="
+    case "$TF_CMD" in
+        "destroy") terraform destroy  -auto-approve $tfplanoutputfile ;;
+        "validate") terraform validate ;;
+        "init") terraform init -var-file=$tfvarfile ;;
+        "plan") terraform plan -var-file=$tfvarfile -out $tfplanoutputfile ;;
+        "refresh") terraform refresh -var-file=$tfvarfile ;;
+        "apply") terraform apply -auto-approve $tfplanoutputfile ;;
+        "output") get_tf_output ;;
+        *)
+            terraform init
+            terraform plan -var-file=$tfvarfile -out $tfplanoutputfile
+            terraform apply -auto-approve $tfplanoutputfile
+        ;;
+    esac
 }
 
 get_tf_output() {
     output_var=$1
-    output=$(terraform output $output_var)
-    return $output
+    terraform output $output_var
 }
 
 get_consumer_svc_pkg() {
     printf "===Getting screwdriver consumer-service package===\n"
-    mkdir -p aws-consumer-service
-    cd aws-consumer-service
-    wget -q -O - https://github.com/screwdriver-cd/aws-consumer-service/releases/latest \
-        egrep -o '/screwdriver-cd/aws-consumer-service/releases/download/v[0-9.]*/aws-consumer-service_linux_amd64' \
-        wget --base=http://github.com/ -i - -O service \
-    chmod +x ./service
-    cd ..
+    if [ ! -f "lambda/aws-consumer-service_0.0.8_linux-amd64" ];then
+        mkdir -p lambda
+        cd lambda
+        # wget -q -O - https://github.com/screwdriver-cd/aws-consumer-service/releases/latest \
+        #     egrep -o '/screwdriver-cd/aws-consumer-service/releases/tag/v0.0.8/aws-consumer-service_0.0.8_linux-amd64' \
+        #     wget --base=http://github.com/ -i - -O service \
+        curl -O https://github.com/screwdriver-cd/aws-consumer-service/releases/latest/v0.0.8/aws-consumer-service_0.0.8_linux-amd64
+        chmod +x ./aws-consumer-service_0.0.8_linux-amd64
+        cd ..
+    fi
 }
 
 main() {
@@ -142,8 +156,11 @@ main() {
     check_svc_vars
   
     get_consumer_svc_pkg
+    
 
-    run_tf_cmd
+    run_tf_cmd "$TF_VAR_FILE_NAME" "consumer_infra.tfplan"
+
+    get_tf_output
 }
 
 main "$@" 
