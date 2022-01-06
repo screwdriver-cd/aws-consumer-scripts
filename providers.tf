@@ -7,11 +7,11 @@ terraform {
   }
   ## Uncomment if using a local backend to save tf state file
   ## replace tf_backend_bucket and aws_region
-  backend "s3" {
-    bucket = "932577692850-aws-integration-tfstate"
-    key    = "sdawscnsumr"
-    region = "us-east-2"
-  }
+  # backend "s3" {
+  #   bucket = tf_backend_bucket
+  #   key    = "sdawscnsumr"
+  #   region = aws_region
+  # }
   ## Uncomment if using a local backend to save tf state file
   # backend "local" {
   #   path = "relative/path/to/terraform.tfstate"
