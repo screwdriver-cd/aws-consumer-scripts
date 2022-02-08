@@ -14,7 +14,7 @@ locals {
       {
         rule_number = 900
         rule_action = "allow"
-        from_port   = 32768
+        from_port   = 1024
         to_port     = 65535
         protocol    = "tcp"
         cidr_block  = "0.0.0.0/0"
@@ -22,17 +22,33 @@ locals {
     ]
     public_inbound = [
       {
-        rule_number = 120
+        rule_number = 1000
         rule_action = "allow"
-        from_port   = 32768
-        to_port     = 60999
+        from_port   = 80
+        to_port     = 80
         protocol    = "tcp"
         cidr_block  = "${var.cidr_block}"
       },
+      {
+        rule_number = 1100
+        rule_action = "allow"
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_block  = "${var.cidr_block}"
+      },
+      {
+        rule_number = 1200
+        rule_action = "allow"
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_block  = "${var.cidr_block}"
+      }
     ]
     public_outbound = [
       {
-        rule_number = 100
+        rule_number = 1000
         rule_action = "allow"
         from_port   = 80
         to_port     = 80
@@ -40,16 +56,74 @@ locals {
         cidr_block  = "0.0.0.0/0"
       },
       {
-        rule_number = 110
+        rule_number = 1100
         rule_action = "allow"
         from_port   = 443
         to_port     = 443
         protocol    = "tcp"
         cidr_block  = "0.0.0.0/0"
+      },
+      {
+        rule_number = 1200
+        rule_action = "allow"
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_block  = "0.0.0.0/0"
       }
     ]
-    private_inbound = []
-    private_outbound = []
+    private_inbound = [
+      {
+        rule_number = 1000
+        rule_action = "allow"
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_block  = "${var.cidr_block}"
+      },
+      {
+        rule_number = 1100
+        rule_action = "allow"
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_block  = "${var.cidr_block}"
+      },
+      {
+        rule_number = 1200
+        rule_action = "allow"
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_block  = "${var.cidr_block}"
+      }
+    ]
+    private_outbound = [
+      {
+        rule_number = 1000
+        rule_action = "allow"
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_block  = "0.0.0.0/0"
+      },
+      {
+        rule_number = 1100
+        rule_action = "allow"
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_block  = "0.0.0.0/0"
+      },
+      {
+        rule_number = 1200
+        rule_action = "allow"
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_block  = "0.0.0.0/0"
+      }
+    ]
   }
 }
 

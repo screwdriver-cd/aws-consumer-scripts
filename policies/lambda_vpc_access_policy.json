@@ -9,7 +9,9 @@
            "ec2:DescribeVpcs",
            "ec2:DeleteNetworkInterface",
            "ec2:DescribeSubnets",
-           "ec2:DescribeSecurityGroups"
+           "ec2:DescribeSecurityGroups",
+           "ec2:DescribeVpcEndpoints",
+           "iam:PassRole"
         ],
         "Effect": "Allow",
         "Resource": "*"

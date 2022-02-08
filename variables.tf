@@ -95,3 +95,9 @@ variable "kafka_topic" {
   type    = string
   description = "The kafka topic name"
 }
+
+variable "msk_cluster_arn" {
+  type    = string
+  default = ""
+  description = "The MSK cluster arn if running in same account"
+}

@@ -42,6 +42,15 @@ module "consumer_fn_sg" {
       rule = "all-all"
     },
   ]
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = -1
+      description = "Allow all outbound traffic"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
 }
 
 resource "aws_route53_zone" "sdbrokerprivatezone" {
@@ -142,13 +151,30 @@ module "lambda_function" {
   timeout                = 300
   lambda_role            = aws_iam_role.sd_consumer_svc_role.arn
   tags                   = var.tags
+  cloudwatch_logs_retention_in_days = 7
+  cloudwatch_logs_kms_key_id = var.kms_key_arn
   environment_variables = {
-    "SD_SLS_BUILD_BUCKET" = "${module.build_artifact_bucket.s3_bucket_arn}"
+    "SD_SLS_BUILD_BUCKET" = "${var.consumer_bucket_name}"
     "SD_SLS_BUILD_ENCRYPTION_KEY" = "${var.kms_key_arn}"
   }
 }
 
+resource "aws_lambda_event_source_mapping" "sd_consumer_svc_event_msk" {
+  count = var.msk_cluster_arn != "" ? 1 : 0
+  event_source_arn  = var.msk_cluster_arn
+  function_name     = module.lambda_function.lambda_function_arn
+  topics            = [var.kafka_topic]
+  starting_position = "TRIM_HORIZON"
+  batch_size = 100
+  maximum_batching_window_in_seconds = 0
+  source_access_configuration {
+    type = "SASL_SCRAM_512_AUTH"
+    uri  = var.sd_broker_secret_arn
+  }
+}
+
 resource "aws_lambda_event_source_mapping" "sd_consumer_svc_event" {
+  count = var.msk_cluster_arn == "" ? 1 : 0
   depends_on        = [module.lambda_function]
   function_name     = module.lambda_function.lambda_function_arn
   topics            = [var.kafka_topic]
