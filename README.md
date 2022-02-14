@@ -36,7 +36,7 @@ All of these tools can be installed via Homebrew on Mac OS X.
 To start using Screwdriver on your AWS account, please reach out to the Screwdriver Cluster Admins and get the following details.
 
 - Get the list of MSK broker endpoints and the corresponding route53 zone name for Screwdriver account.
-- Amazon Secret Manager Secret for KMS key which will be provisioned by Screwdriver Cluster admin
+- Create Amazon Secret Manager Secret for KMS account credentials. KMS credentials will be provisioned by Screwdriver Cluster admin
 
 ## Instructions
 
