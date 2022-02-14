@@ -33,7 +33,10 @@ The followings are the external dependencies required to run this onboarding scr
 All of these tools can be installed via Homebrew on Mac OS X.
 
 ## Prerequisite
-To start using Screwdriver on your AWS account, please reach out to the Screwdriver Team and get the list of broker endpoints and the corresponding route53 zone name. Also a Amazon Secret Manager secret with rotation and KMS Key needs to be created separately, the values and scripts for which will be provided by Screwdriver Team.
+To start using Screwdriver on your AWS account, please reach out to the Screwdriver Cluster Admins and get the following details.
+
+- List of MSK broker endpoints and the corresponding route53 zone name for Screwdriver application.
+- AWS KMS credentials to connect to AWS KMS queue for your AWS account. Use it to create secret in Amazon Secret Manager.
 
 ## Instructions
 
