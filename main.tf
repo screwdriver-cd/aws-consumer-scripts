@@ -143,7 +143,7 @@ module "lambda_function" {
   runtime                = "go1.x"
   create_package         = true
   create_role            = false
-  source_path            = "./lambda/"
+  source_path            = "./lambda/aws-consumer-service"
   vpc_subnet_ids         = local.vpc.private_subnets
   vpc_security_group_ids = [module.consumer_fn_sg.security_group_id]
   memory_size            = "128"

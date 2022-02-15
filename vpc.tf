@@ -140,6 +140,7 @@ module "vpc" {
 
   enable_nat_gateway = true
   single_nat_gateway = true
+  enable_dns_hostnames = true
 
   manage_default_network_acl = false
   public_dedicated_network_acl   = true

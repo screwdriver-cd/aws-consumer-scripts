@@ -135,14 +135,13 @@ get_tf_output() {
 
 get_consumer_svc_pkg() {
     printf "===Getting screwdriver consumer-service package===\n"
-    if [ ! -f "lambda/aws-consumer-service_0.0.8_linux-amd64" ];then
+    if [ ! -f "lambda/aws-consumer-service" ];then
         mkdir -p lambda
         cd lambda
-        # wget -q -O - https://github.com/screwdriver-cd/aws-consumer-service/releases/latest \
-        #     egrep -o '/screwdriver-cd/aws-consumer-service/releases/tag/v0.0.8/aws-consumer-service_0.0.8_linux-amd64' \
-        #     wget --base=http://github.com/ -i - -O service \
-        curl -O https://github.com/screwdriver-cd/aws-consumer-service/releases/latest/v0.0.8/aws-consumer-service_0.0.8_linux-amd64
-        chmod +x ./aws-consumer-service_0.0.8_linux-amd64
+        wget -q -O - https://github.com/screwdriver-cd/aws-consumer-service/releases/latest \
+        | egrep -o '/screwdriver-cd/aws-consumer-service/releases/download/v[0-9.]*/aws-consumer-service_linux_amd64' \
+        | wget --base=http://github.com/ -i - -O aws-consumer-service
+        chmod +x ./aws-consumer-service
         cd ..
     fi
 }
