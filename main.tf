@@ -139,7 +139,7 @@ module "lambda_function" {
 
   function_name          = var.consumer_fn_name
   description            = "Screwdriver AWS Integration Consumer"
-  handler                = "index"
+  handler                = "aws-consumer-service"
   runtime                = "go1.x"
   create_package         = true
   create_role            = false
