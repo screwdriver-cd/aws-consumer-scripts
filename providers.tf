@@ -7,10 +7,6 @@ terraform {
   }
   ## update variables tf_backend_bucket and aws_region
   backend "s3" {}
-  #  bucket = "340272556944-aws-integration-tfstate"
-  #  key    = "vespa-consumer.tfstate"
-  #  region = "us-west-2"
-  #}
   ## Uncomment if using a local backend to save tf state file
   # backend "local" {
   #   path = "relative/path/to/terraform.tfstate"
