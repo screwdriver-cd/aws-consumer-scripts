@@ -4,6 +4,10 @@ CWD=$(dirname ${BASH_SOURCE})
 
 declare TF_CMD
 declare TF_VAR_FILE_NAME="./setup.tfvars.json"
+declare TF_VAR_tf_backend_bucket
+declare TF_VAR_tf_state_key="consumer.tfstate"
+declare TF_VAR_tf_region
+declare TF_PHASE_INTERFACES
 
 function usage {
     echo "usage: $programname [-ipavro]"
@@ -18,11 +22,12 @@ function usage {
 }
 
 check_dependencies() {
-    declare -r deps=(terraform aws wget)
+    declare -r deps=(terraform aws wget jq)
     declare -r install_docs=(
         'https://github.com/hashicorp/terraform/releases/latest'
         'https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html'
         'https://www.gnu.org/software/wget/'
+        'https://github.com/stedolan/jq/releases/latest'
     )
 
     for ((i = 0, f = 0; i < ${#deps[@]}; i++)); do
@@ -45,7 +50,6 @@ read_var_file() {
         echo "Will use empty key: $data"
         dirtyfile=0
     fi
-    return $dirtyfile
 }
 
 check_svc_vars() {
@@ -93,6 +97,11 @@ read_input() {
                 TF_CMD="validate"
                 shift 1 
                 ;;
+            -it|--interface)
+                TF_CMD="refresh"
+                TF_PHASE_INTERFACES="true"
+                shift 1
+                ;;
             -all)
                 TF_CMD="all"
                 shift 1 
@@ -113,15 +122,15 @@ run_tf_cmd() {
     tfplanoutputfile=$2
     echo "===Runnning terraform $TF_CMD script==="
     case "$TF_CMD" in
-        "destroy") terraform destroy  -auto-approve $tfplanoutputfile ;;
+        "destroy") terraform destroy  -auto-approve -var-file=$tfvarfile ;;
         "validate") terraform validate ;;
-        "init") terraform init -var-file=$tfvarfile ;;
+        "init") terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region" ;;
         "plan") terraform plan -var-file=$tfvarfile -out $tfplanoutputfile ;;
         "refresh") terraform refresh -var-file=$tfvarfile ;;
         "apply") terraform apply -auto-approve $tfplanoutputfile ;;
         "output") get_tf_output ;;
         *)
-            terraform init
+            terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region"
             terraform plan -var-file=$tfvarfile -out $tfplanoutputfile
             terraform apply -auto-approve $tfplanoutputfile
         ;;
@@ -130,7 +139,7 @@ run_tf_cmd() {
 
 get_tf_output() {
     output_var=$1
-    terraform output $output_var
+    res=`terraform output $output_var`
 }
 
 get_consumer_svc_pkg() {
@@ -146,6 +155,12 @@ get_consumer_svc_pkg() {
     fi
 }
 
+get_backend_info() {
+    # get backend info
+    TF_VAR_tf_backend_bucket=`jq -r '.tf_backend_bucket' $TF_VAR_FILE_NAME`
+    TF_VAR_tf_region=`jq -r '.aws_region' $TF_VAR_FILE_NAME`
+}
+
 main() {
     
     check_dependencies
@@ -153,13 +168,26 @@ main() {
     read_input "$@"
 
     check_svc_vars
+    
+    get_backend_info
   
     get_consumer_svc_pkg
-    
+
+    echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
 
     run_tf_cmd "$TF_VAR_FILE_NAME" "consumer_infra.tfplan"
 
     get_tf_output
+    
+    if [ "$TF_PHASE_INTERFACES" == 'true' ];then
+        TF_CMD="all"
+        cd interface
+        echo "Creating interfaces"
+        TF_VAR_FILE_NAME="interface.tfvars.json"
+        TF_VAR_tf_state_key="consumerinterface.tfstate"  
+        echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
+        run_tf_cmd "$TF_VAR_FILE_NAME" "interfaces_infra.tfplan"
+    fi
 }
 
 main "$@" 

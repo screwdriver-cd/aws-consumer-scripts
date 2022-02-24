@@ -1,3 +1,48 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
+variable "private_subnets" {}
+variable "public_subnets" {}
+variable "vpc_id" {}
+variable "cidr_block" {}
+variable "vpc_name" {}
+variable "azs" {}
+variable "create_vpc" {}
+variable "tags" {}
+
+data "aws_vpc" "selected" {
+  count = var.create_vpc ? 0 : 1
+  id    = var.vpc_id
+}
+
+data "aws_subnet" "selected" {
+  for_each   = var.create_vpc ? [] : toset(var.private_subnets)
+  vpc_id     = var.vpc_id
+  cidr_block = each.value
+}
+
+locals {
+  vpc = (
+    var.create_vpc ?
+    {
+      id              = module.vpc.vpc_id
+      cidr_block      = module.vpc.vpc_cidr_block
+      private_subnets = module.vpc.private_subnets
+    } :
+    {
+      id              = data.aws_vpc.selected[0].id
+      cidr_block      = data.aws_vpc.selected[0].cidr_block
+      private_subnets = [for s in data.aws_subnet.selected[0] : s.id]
+    }
+  )
+}
+
 locals {
   network_acls = {
     default_inbound = [
@@ -128,27 +173,27 @@ locals {
 }
 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  create_vpc = local.create_vpc
+  source     = "terraform-aws-modules/vpc/aws"
+  create_vpc = var.create_vpc
 
-  name = "${var.vpc_name}"
-  cidr = "${var.cidr_block}"
+  name = var.vpc_name
+  cidr = var.cidr_block
 
-  azs             = "${var.azs}"
-  private_subnets = "${var.private_subnets}"
-  public_subnets  = "${var.public_subnets}"
+  azs             = var.azs
+  private_subnets = var.private_subnets
+  public_subnets  = var.public_subnets
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
   enable_dns_hostnames = true
 
-  manage_default_network_acl = false
-  public_dedicated_network_acl   = true
-  public_inbound_acl_rules       = concat(local.network_acls["default_inbound"], local.network_acls["public_inbound"])
-  public_outbound_acl_rules      = concat(local.network_acls["default_outbound"], local.network_acls["public_outbound"])
-  private_dedicated_network_acl     = true
-  private_inbound_acl_rules       = concat(local.network_acls["default_inbound"], local.network_acls["private_inbound"])
-  private_outbound_acl_rules      = concat(local.network_acls["default_outbound"], local.network_acls["private_outbound"])
-  
+  manage_default_network_acl    = false
+  public_dedicated_network_acl  = true
+  public_inbound_acl_rules      = concat(local.network_acls["default_inbound"], local.network_acls["public_inbound"])
+  public_outbound_acl_rules     = concat(local.network_acls["default_outbound"], local.network_acls["public_outbound"])
+  private_dedicated_network_acl = true
+  private_inbound_acl_rules     = concat(local.network_acls["default_inbound"], local.network_acls["private_inbound"])
+  private_outbound_acl_rules    = concat(local.network_acls["default_outbound"], local.network_acls["private_outbound"])
+
   tags = var.tags
 }

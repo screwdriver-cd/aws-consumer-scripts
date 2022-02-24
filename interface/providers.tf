@@ -1,3 +1,4 @@
+
 terraform {
   required_providers {
     aws = {
@@ -5,11 +6,12 @@ terraform {
       version = "~> 3.0"
     }
   }
-  ## update variables tf_backend_bucket and aws_region
+  ## Uncomment if using a local backend to save tf state file
+  ## replace tf_backend_bucket and aws_region
   backend "s3" {}
-  #  bucket = "340272556944-aws-integration-tfstate"
-  #  key    = "vespa-consumer.tfstate"
-  #  region = "us-west-2"
+  #  bucket = var.tf_backend_bucket
+  #  key    = "vespa-consumerinterface.tfstate"
+  #  region = var.aws_region
   #}
   ## Uncomment if using a local backend to save tf state file
   # backend "local" {
@@ -18,9 +20,4 @@ terraform {
 }
 provider "aws" {
   region = var.aws_region
-}
-    
-provider "aws" {
-  region = var.build_region
-  alias = "build"
 }

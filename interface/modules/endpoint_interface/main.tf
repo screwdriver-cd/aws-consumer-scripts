@@ -7,14 +7,13 @@ variable "security_group_id" {}
 variable "endpt_svc_name" {}
 variable "az_id" {}
 
-
 data "aws_subnet" "privatesubnets" {
   for_each = toset(var.subnets)
   id       = each.value
 }
 
 locals {
-  subnet_az_mapping = { for id, subnet in data.aws_subnet.privatesubnets: format("%s", subnet.availability_zone) => id }
+  subnet_az_mapping = { for id, subnet in data.aws_subnet.privatesubnets: format("%s", subnet.availability_zone_id) => id }
 }
 
 resource "aws_vpc_endpoint" "sd_brkr_service" {

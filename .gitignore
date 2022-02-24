@@ -33,5 +33,6 @@ override.tf.json
 *.tfplan
 *.log
 *.tfvars.json
-lambda/
+/lambda
+/builds
 
