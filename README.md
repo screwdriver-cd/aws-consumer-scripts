@@ -70,6 +70,8 @@ The following table describes all the configurable variables defined in `setup.t
 | create_ecr <sup>^</sup> | Boolean | Flag to create AWS ECR |
 | ecr_name <sup>$^</sup> | String | Name of the AWS ECR |
 | consumer_role_arn <sup>$</sup> | String | IAM Build role for allowing permissions |
+| create_service_role <sup>^</sup> | Boolean | Flag to create builds service role with codebuild permissions |
+| build_role_name <sup>^</sup> | String | Name of the role for running builds |
 
 The following table describes all the configurable variables defined in `interface.tfvars.json`.
 This is part of the second phase of installation defined in Step 5 of [instructions](#begin-the-infrastructure-provisioning-process).

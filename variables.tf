@@ -176,3 +176,14 @@ variable "tf_backend_bucket" {
   type = string
   description = "The tf backend bucket"
 }
+
+variable "create_service_role" {
+  type = bool
+  default = false
+  description = "Flag to create builds service role with codebuild permissions"
+}
+variable "build_role_name"{
+  type = string
+  default = "screwdriver-builds-role"
+  description = "Name of the role for running builds"
+}

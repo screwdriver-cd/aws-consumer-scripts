@@ -97,3 +97,13 @@ module "kms" {
   source             = "./modules/kms"
   kms_key_alias_name = var.sd_build_kms_key_alias
 }
+module "build_service_role" {
+  providers = {
+    aws = aws.build
+  }
+  source                = "./modules/buildrole"
+  kms_key_alias         = var.sd_build_kms_key_alias
+  build_artifact_bucket = var.consumer_bucket_name
+  create_service_role   = var.create_service_role
+  build_role_name       = var.build_role_name
+}

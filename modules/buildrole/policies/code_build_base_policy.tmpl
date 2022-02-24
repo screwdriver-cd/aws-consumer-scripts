@@ -1,0 +1,116 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "cbbase1",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetDownloadUrlForLayer",
+                "codebuild:StopBuild",
+                "ecr:UploadLayerPart",
+                "ecr:ListImages",
+                "logs:CreateLogGroup",
+                "codebuild:RetryBuild",
+                "ecr:PutImage",
+                "logs:CreateLogStream",
+                "ecr:BatchGetImage",
+                "ecr:CompleteLayerUpload",
+                "ecr:DescribeImages",
+                "codebuild:StartBuild",
+                "ecr:InitiateLayerUpload",
+                "ecr:BatchCheckLayerAvailability"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:${aws_account_id}:log-group:aws/codebuild/*",
+                "arn:aws:codebuild:*:${aws_account_id}:project/*",
+                "arn:aws:logs:*:${aws_account_id}:log-group:/aws/codebuild/*:log-stream:*"
+            ]
+        },
+        {
+            "Sid": "s3base1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObjectAcl",
+                "s3:GetObjectVersion",
+                "s3:GetBucketLocation",
+                "s3:ListBucketVersions",
+                "s3:ListBucket",
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:GetBucketAcl",
+                "s3:GetObjectVersionAcl",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::screwdriver-consumer-builds-${aws_account_id}-use2",
+                "arn:aws:s3:::screwdriver-consumer-builds-${aws_account_id}-use2/*",
+                "arn:aws:s3:::codepipeline-${aws_region}-*"
+            ]
+        },
+        {
+            "Sid": "cbbase2",
+            "Effect": "Allow",
+            "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutCodeCoverages",
+                "codebuild:BatchPutTestCases"
+            ],
+            "Resource": "arn:aws:codebuild:*:${aws_account_id}:report-group/*"
+        },
+        {
+            "Sid": "vpc1",
+            "Effect": "Allow",
+            "Action": "ec2:CreateNetworkInterfacePermission",
+            "Resource": "arn:aws:ec2:${aws_region}:${aws_account_id}:network-interface/*",
+            "Condition": {
+                "StringEquals": {
+                    "ec2:AuthorizedService": "codebuild.amazonaws.com"
+                },
+                "ArnLike": {
+                    "ec2:Subnet": "arn:aws:ec2:${aws_region}:${aws_account_id}:subnet/subnet-*"
+                }
+            }
+        },
+        {
+            "Sid": "vpc2",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateNetworkInterface",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeVpcs",
+                "ec2:DeleteNetworkInterface",
+                "ec2:DescribeDhcpOptions",
+                "ec2:DescribeSubnets",
+                "logs:PutLogEvents",
+                "ec2:DescribeSecurityGroups",
+                "ecr:GetAuthorizationToken"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "kms1",
+            "Effect": "Allow",
+            "Action": [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey"
+            ],
+            "Resource": "${kms_key_alias}"
+        },
+        {
+            "Sid": "ssmPolicy",
+            "Effect": "Allow",
+            "Action": [
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
