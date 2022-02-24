@@ -162,7 +162,7 @@ export AWS_REGION=<region_name>
 
 ### Begin the infrastructure provisioning process:
 
-Note: The setup relies on terraform for provisioning so the backend configuration and state file are important for recovering from error or pushing future updates. The the state file ends with `.tfstate` and will be automatically synced to the backend S3 bucket. This process generates two state files `consumer.tfstate1` and `consumerinterface.tfstate`. There are 2 parts:
+Note: The setup relies on terraform for provisioning so the backend configuration and state file are important for recovering from error or pushing future updates. The state file ends with `.tfstate` and will be automatically synced to the backend S3 bucket. This process generates two state files `consumer.tfstate1` and `consumerinterface.tfstate`. There are 2 parts:
  - The VPC and Service Creation
  - The Endpoint Interface creation which depends on the subnets created with VPC.
 Don't delete the state files in between the process 
