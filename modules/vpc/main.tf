@@ -27,7 +27,7 @@ data "aws_vpc" "selected" {
 }
 
 data "aws_subnets" "selected" {
-  count    = var.create_vpc ? 0 : 1
+  count = var.create_vpc ? 0 : 1
   filter {
     name   = "vpc-id"
     values = [var.vpc_id]
@@ -206,10 +206,10 @@ module "vpc" {
   private_outbound_acl_rules    = concat(local.network_acls["default_outbound"], local.network_acls["private_outbound"])
 
   tags = var.tags
-  private_subnet_tags =  {
-    Network : "Private"
-  }
-  public_subnet_tags = {
-    Network : "Public"
-  }
+  private_subnet_tags = merge(tomap("${var.tags}"),
+    { Network : "Private" }
+  )
+  public_subnet_tags = merge(tomap("${var.tags}"),
+    { Network : "Public" }
+  )
 }

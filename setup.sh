@@ -246,17 +246,7 @@ main() {
         TF_VAR_tf_state_key="consumerbuilds-$TF_VAR_tf_build_region.tfstate"  
         echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
         run_tf_cmd "$TF_VAR_FILE_NAME" "builds-$TF_VAR_tf_build_region.tfplan"
-    else
-        
-        get_consumer_svc_pkg
-
-        echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
-
-        run_tf_cmd "$TF_VAR_FILE_NAME" "consumer_infra.tfplan"
-
-        get_tf_output
-
-        if [ "$TF_PHASE_INTERFACES" == 'true' ];then
+    elif [ "$TF_PHASE_INTERFACES" == 'true' ];then
             TF_CMD="all"
             TF_WORK_DIR='./interface'
             echo "Creating interfaces"
@@ -264,7 +254,14 @@ main() {
             TF_VAR_tf_state_key="consumerinterface.tfstate"  
             echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
             run_tf_cmd "$TF_VAR_FILE_NAME" "interfaces_infra.tfplan"
-        fi
+    else
+        get_consumer_svc_pkg
+
+        echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
+
+        run_tf_cmd "$TF_VAR_FILE_NAME" "consumer_infra.tfplan"
+
+        get_tf_output
     fi
 
 }

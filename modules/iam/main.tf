@@ -10,16 +10,16 @@ terraform {
 variable "iam_role_name" {}
 
 data "template_file" "assume_role_policy" {
-  template = file("../policies/lambda_assume_role_policy.json")
+  template = file("${path.root}/policies/lambda_assume_role_policy.json")
 }
 data "template_file" "lambda_vpc_policy" {
-  template = file("../policies/lambda_vpc_access_policy.json")
+  template = file("${path.root}/policies/lambda_vpc_access_policy.json")
 }
 data "template_file" "lambda_msk_policy" {
-  template = file("../policies/lambda_msk_access_policy.json")
+  template = file("${path.root}/policies/lambda_msk_access_policy.json")
 }
 data "template_file" "lambda_cb_policy" {
-  template = file("../policies/lambda_codebuild_policy.json")
+  template = file("${path.root}/policies/lambda_codebuild_policy.json")
 }
 
 resource "aws_iam_role" "sd_consumer_svc_role" {

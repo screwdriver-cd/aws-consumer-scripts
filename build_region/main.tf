@@ -24,7 +24,7 @@ module "vpc_build" {
   private_subnets = var.build_private_subnets
   public_subnets  = var.build_public_subnets
   vpc_name        = var.build_vpc_name
-  azs             = ["${var.build_region}-a", "${var.build_region}-b", "${var.build_region}-c"]
+  azs             = ["${var.build_region}a", "${var.build_region}b", "${var.build_region}c"]
   vpc_id          = var.build_vpc_id
   tags            = var.tags
   build_region    = var.build_region

@@ -17,7 +17,7 @@ provider "aws" {
 variable "kms_key_alias_name" {}
 variable "build_region" {}
 data "template_file" "kms_policy" {
-  template = templatefile("../policies/kms_policy.tmpl", {
+  template = templatefile("${path.root}/policies/kms_policy.tmpl", {
     aws_region = var.build_region
     aws_account_id = data.aws_caller_identity.current.account_id
   })
