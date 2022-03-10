@@ -42,8 +42,8 @@
                 "s3:DeleteObject"
             ],
             "Resource": [
-                "arn:aws:s3:::screwdriver-consumer-builds-${aws_account_id}-use2",
-                "arn:aws:s3:::screwdriver-consumer-builds-${aws_account_id}-use2/*",
+                "arn:aws:s3:::${build_artifact_bucket}",
+                "arn:aws:s3:::${build_artifact_bucket}/*",
                 "arn:aws:s3:::codepipeline-${aws_region}-*"
             ]
         },

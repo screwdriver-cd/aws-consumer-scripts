@@ -193,3 +193,8 @@ variable "user_aws_account_id" {
   type = string
   description = "User AWS account ID"
 }
+variable "create_build_sg" {
+  type =  bool
+  default = true
+  description = "Create security group in build region"
+}

@@ -7,6 +7,10 @@ terraform {
   }
 }
 
+provider "aws" {
+  region = var.build_region
+}
+
 variable "private_subnets" {}
 variable "public_subnets" {}
 variable "vpc_id" {}
@@ -15,16 +19,22 @@ variable "vpc_name" {}
 variable "azs" {}
 variable "create_vpc" {}
 variable "tags" {}
+variable "build_region" {}
 
 data "aws_vpc" "selected" {
   count = var.create_vpc ? 0 : 1
   id    = var.vpc_id
 }
 
-data "aws_subnet" "selected" {
-  for_each   = var.create_vpc ? [] : toset(var.private_subnets)
-  vpc_id     = var.vpc_id
-  cidr_block = each.value
+data "aws_subnets" "selected" {
+  count    = var.create_vpc ? 0 : 1
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
+  tags = {
+    Network = "Private"
+  }
 }
 
 locals {
@@ -38,7 +48,7 @@ locals {
     {
       id              = data.aws_vpc.selected[0].id
       cidr_block      = data.aws_vpc.selected[0].cidr_block
-      private_subnets = [for s in data.aws_subnet.selected[0] : s.id]
+      private_subnets = data.aws_subnets.selected[0].ids
     }
   )
 }
@@ -196,4 +206,10 @@ module "vpc" {
   private_outbound_acl_rules    = concat(local.network_acls["default_outbound"], local.network_acls["private_outbound"])
 
   tags = var.tags
+  private_subnet_tags =  {
+    Network : "Private"
+  }
+  public_subnet_tags = {
+    Network : "Public"
+  }
 }

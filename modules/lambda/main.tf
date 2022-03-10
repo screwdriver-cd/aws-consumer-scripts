@@ -6,6 +6,11 @@ terraform {
     }
   }
 }
+provider "aws" {
+  region = var.build_region
+}
+
+variable "build_region" {}
 
 variable "consumer_bucket_name" {}
 variable "consumer_fn_name" {}

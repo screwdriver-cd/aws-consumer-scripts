@@ -44,6 +44,7 @@ The following table describes all the configurable variables defined in `setup.t
 | Name | Type | Description |
 | - | - | - |
 | aws_region <sup>*</sup> | String | AWS Region where resources will be provisioned |
+| user_aws_account_id <sup>*</sup> | String | The user AWS account ID |
 | tf_backend_bucket <sup>*</sup> | String | Terraform backend S3 bucket for storing tf state |
 | sd_broker_endpointsvc_map <sup>*</sup> | Map | Screwdriver Broker Service and VPC Endpoint Map |
 | sd_broker_endpointsvc_port <sup>*</sup> | Integer | Screwdriver Broker Service Port |
@@ -152,7 +153,7 @@ Manually in AWS Console or using `aws cli`
 
 ## Instructions
 Git clone this repository [aws-consumer-service](https://github.com/screwdriver-cd/aws-consumer-service).
-To get started, we need to update the var file with the required details. Please refer to [`setup.tfvars.json.tmpl`](./setup.tfvars.json.tmpl) for the variables list and configuration definition for information on each argument. Rename file to `setup.tfvars.json`. Following the naming convention as per the template is recommended.
+To get started, we need to update the var file with the required details. Please refer to [`setup.tfvars.json.tmpl`](./setup.tfvars.json.tmpl) and [`default.tfvars.json`](./default.tfvars.json) for the variables list and configuration definition for information on each argument. Rename file to `setup.tfvars.json`. Following the naming convention as per the template is recommended. This file also serves as the override for all default values in [`default.tfvars.json`](./default.tfvars.json). If you wish to override vpc creation, role creation and other settings from default, based on your environment you can specify in the setup.tfvars.json file and the script will refer to the new values.
 
 Second, configure the AWS CLI by running `aws configure` with your AWS credentials and select profile for the desired account.
 ```
@@ -162,9 +163,10 @@ export AWS_REGION=<region_name>
 
 ### Begin the infrastructure provisioning process:
 
-Note: The setup relies on terraform for provisioning so the backend configuration and state file are important for recovering from error or pushing future updates. The state file ends with `.tfstate` and will be automatically synced to the backend S3 bucket. This process generates two state files `consumer.tfstate1` and `consumerinterface.tfstate`. There are 2 parts:
+Note: The setup relies on terraform for provisioning so the backend configuration and state file are important for recovering from error or pushing future updates. The state file ends with `.tfstate` and will be automatically synced to the backend S3 bucket. This process generates two state files `consumer.tfstate` and `consumerinterface.tfstate`. There are 2 parts:
  - The VPC and Service Creation
  - The Endpoint Interface creation which depends on the subnets created with VPC.
+ - Region Specific resource creation for running builds in various regions
 Don't delete the state files in between the process 
 
 - Step 1: Update and verify all the information in `setup.tfvars.json` file. This is the key source of information.
@@ -205,14 +207,21 @@ Alternatively, to uninstall all infrastructure:
 
 - Step 7: Go to the AWS Lambda Console and verify the service connection in `consumer-service-lambda`. The trigger should be updated and the result from trigger should be `OK`
 
+- Step 8: To run builds in various regions, update the `build_region` and `build_vpc_id` in the setup.tfvars.json file based on the region and run the following commands for each region.
+```sh
+./setup.sh -br -i
 
-- Step 8: Saving current `.tfvars` file info.
+./setup.sh -br -p
+
+./setup.sh -br -a
+```  
+
+- Step 9: Saving current `.tfvars` file info.
 It is recommended that you keep your updated `.tfvars` file backup before cleaning up the repository.
 Here are a few helpful commands to upload the `.tfvars` to your `tf_backend_bucket`
 ```sh
 aws s3api put-object --bucket $tf_backend_bucket --key setup.tfvars.json --body setup.tfvars.json
 aws s3api put-object --bucket $tf_backend_bucket --key interface.tfvars.json --body interface/interface.tfvars.json
-
 ```
 
 - Step 9: Remove directory `aws-consumer-service`
@@ -226,14 +235,13 @@ The resources in the infrastructure will be created based on the VPC configurati
 
 #### Consumer Resources with Existing VPC
 
-For existing VPC and subnets, all we need are the resource ID of the VPC, the CIDRs of the private subnets and the Availability Zones. If using existing VPC it needs to have both private and public subnets as the resources will be created in private subnets. Also the private subnets should have outbound access to the internet. Therefore, we highly recommend reviewing your existing VPC to see if it fits or a new one should be created instead. Additionally, you can update the other variables like VPC name and consumer function name.
+For existing VPC and subnets, all we need are the resource ID of the VPC, the CIDRs of the private subnets and the Availability Zones. If using existing VPC it needs to have both private and public subnets as the resources will be created in private subnets. Also the private subnets should have outbound access to the internet. Therefore, we highly recommend reviewing your existing VPC to see if it fits or a new one should be created instead. The private subnets must be tagged with `Network:Private` tags to get the private subnets in this configuration. The Availability Zones are by default takes and `region-a|b|c` for new vpc creation. Additionally, you can update the other variables like VPC name and consumer function name.
 
 Example mandatory configuration for an existing VPC:
 ```yaml
 aws_region="us-west-2"
 tf_backend_bucket="sd-aws-consumer-tf-backend-11111111"
 vpc_id="vpc-1234"
-private_subnets=["10.10.106.0/25", "10.10.106.128/25", "10.10.107.0/25", "10.10.107.128/25"]
 azs=["us-west-2a", "us-west-2b", "us-west-2c"]
 ```
 #### Consumer Resources with New VPC
@@ -255,14 +263,14 @@ azs=["us-west-2a", "us-west-2b", "us-west-2c"]
 # Frequently asked questions
 
 1. Can I run builds in any region?
-A: Yes, Screwdriver Consumer Infrastructure will provisioned based on the argument `aws_region` provided by Screwdriver Admins. Builds can run in any region specified by `build_region`. You can rerun the setup for multiple regions by updating this value.
+A: Yes, Screwdriver Consumer Infrastructure will provisioned based on the argument `aws_region` provided by Screwdriver Admins. Builds can run in any region specified in `build_regions`. You can rerun the setup for multiple regions by updating this value.
 Note: Do not change the `aws_region` value and re-run the infrastructure.
 
 2. How can I create a Build vpc?
-A: Build VPC can be created by simply setting flag `create_build_vpc: true` in `setup.tfvars.json` file. The VPC, KMS key `sd_build_kms_key_alias` and build bucket `consumer_bucket_name` will be provisioned in the region specified by `build_region`
+A: Build VPC can be created by simply setting flag `create_build_vpc: true` in `setup.tfvars.json` file. The VPC, KMS key `sd_build_kms_key_alias` and build bucket `consumer_bucket_name` will be provisioned in the region specified in `build_regions`
 
 3. How can I create an AWS ECR and use custom images?
-A: Yes can set `create_ecr: true` to create a custom Elastic Container Registry `ecr_name` in your `build_region`. The setup will add the required permissions. You will need to specify the build role that will have access to the ECR.
+A: Yes can set `create_ecr: true` to create a custom Elastic Container Registry `ecr_name` in your `build_regions`. The setup will add the required permissions. You will need to specify the build role that will have access to the ECR.
 
 4. What are the docker images and environments that are supported for Code Build executor?
 A: Screwdriver integration supports all docker images and environments that are supported by [AWS CodeBuild](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html). You can specify the image in you screwdriver.yaml configuration.
@@ -270,3 +278,5 @@ A: Screwdriver integration supports all docker images and environments that are 
 5. I encountered and error in running setup, and some resources already exist, can I run delete infrastructure.
 A: Delete should be used cautiously and are for advanced users. If you face any error, reach out to you cluster admins to resolve them. In most cases, existing resources can be imported to the current setup, without deleting.
 
+6. How to use existing an VPC for consumer resources and build resources?
+A: to use existing vpc's update setup.tfvars.json file with the vpc_id and build_vpc_id for the specific region and tag your private subnets with the following tag: {Network: Private}

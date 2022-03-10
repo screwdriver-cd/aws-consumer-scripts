@@ -1,3 +1,15 @@
+
+module "aws_util" {
+  source  = "cloudposse/utils/aws"
+  version     = "0.8.1"
+}
+
+locals {
+  shorten_regions   = true
+  naming_convention = local.shorten_regions ? "to_short" : "identity"
+  az_map            = module.aws_util.region_az_alt_code_maps[local.naming_convention]
+}
+
 locals {
   sd_kafka_brokers    = [for b in var.sd_broker_endpointsvc_map : b[0]]
 }
@@ -11,6 +23,7 @@ module "vpc" {
   azs             = var.azs
   vpc_id          = var.vpc_id
   tags            = var.tags
+  build_region    = var.aws_region
 }
 
 module "route53" {
@@ -23,17 +36,11 @@ module "securitygroup" {
   security_group_prefix = var.consumer_fn_name
   vpc_id                = module.vpc.id
   create_sg             = true
+  build_region          = var.aws_region
 }
 module "iam" {
   source        = "./modules/iam"
   iam_role_name = var.consumer_fn_name
-}
-module "s3" {
-  providers = {
-    aws = aws.build
-  }
-  source      = "./modules/s3"
-  bucket_name = var.consumer_bucket_name
 }
 
 module "lambda" {
@@ -41,7 +48,7 @@ module "lambda" {
   security_group_id        = module.securitygroup.security_group_id
   tags                     = var.tags
   kms_key_arn              = var.kms_key_arn
-  consumer_bucket_name     = var.consumer_bucket_name
+  consumer_bucket_name     = "${var.consumer_bucket_prefix}-${var.user_aws_account_id}-${local.az_map[var.aws_region]}"
   consumer_fn_name         = var.consumer_fn_name
   sd_consumer_svc_role_arn = module.iam.sd_consumer_svc_role_arn
   private_subnets          = module.vpc.private_subnets
@@ -51,59 +58,21 @@ module "lambda" {
   log_retention_days       = 7
   sd_kafka_brokers         = local.sd_kafka_brokers
   sd_broker_secret_arn     = var.sd_broker_secret_arn
+  build_region             = var.aws_region
 }
 
 module "ecr" {
-  providers = {
-    aws = aws.build
-  }
   source                      = "./modules/ecr"
   create_ecr                  = var.create_ecr
   ecr_name                    = var.ecr_name
   consumer_role_arn           = var.consumer_role_arn
+  build_region                = var.aws_region
 }
 
-# If builds are running in region other than the consumer service region 
-# additionally create vpc, security group, ecr
-module "vpc_build" {
-  providers = {
-    aws = aws.build
-  }
-  source          = "./modules/vpc"
-  create_vpc      = var.create_build_vpc && var.build_vpc_id == "" ? true : false
-  cidr_block      = var.build_cidr_block
-  private_subnets = var.build_private_subnets
-  public_subnets  = var.build_public_subnets
-  vpc_name        = var.build_vpc_name
-  azs             = var.build_azs
-  vpc_id          = var.build_vpc_id
-  tags            = var.tags
-}
-
-module "securitygroup_build" {
-  providers = {
-    aws = aws.build
-  }
-  source                = "./modules/securitygroup"
-  create_sg             = var.create_build_vpc
-  security_group_prefix = "${var.consumer_fn_name}-build"
-  vpc_id                = module.vpc_build.id
-}
-
-module "kms" {
-  providers = {
-    aws = aws.build
-  }
-  source             = "./modules/kms"
-  kms_key_alias_name = var.sd_build_kms_key_alias
-}
 module "build_service_role" {
-  providers = {
-    aws = aws.build
-  }
   source                = "./modules/buildrole"
   kms_key_alias         = var.sd_build_kms_key_alias
-  build_artifact_bucket = var.consumer_bucket_name
+  build_artifact_bucket = "${var.consumer_bucket_prefix}-${var.user_aws_account_id}-*"
   create_service_role   = var.create_service_role
   build_role_name       = var.build_role_name
 }

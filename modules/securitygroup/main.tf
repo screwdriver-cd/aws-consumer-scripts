@@ -10,6 +10,10 @@ terraform {
 variable "security_group_prefix" {}
 variable "create_sg" {}
 variable "vpc_id" {}
+variable "build_region" {}
+provider "aws" {
+  region = var.build_region
+}
 
 module "consumer_fn_sg" {
   source = "terraform-aws-modules/security-group/aws"

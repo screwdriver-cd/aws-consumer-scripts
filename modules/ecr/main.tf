@@ -6,7 +6,11 @@ terraform {
     }
   }
 }
+provider "aws" {
+  region = var.build_region
+}
 
+variable "build_region" {}
 variable "create_ecr" {}
 variable "ecr_name" {}
 variable "consumer_role_arn" {}

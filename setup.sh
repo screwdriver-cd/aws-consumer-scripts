@@ -3,11 +3,13 @@ set -eo pipefail
 CWD=$(dirname ${BASH_SOURCE})
 
 declare TF_CMD
-declare TF_VAR_FILE_NAME="./setup.tfvars.json"
+declare TF_VAR_FILE_NAME="./provision.tfvars.json"
 declare TF_VAR_tf_backend_bucket
 declare TF_VAR_tf_state_key="consumer.tfstate"
 declare TF_VAR_tf_region
+declare TF_VAR_tf_build_region
 declare TF_PHASE_INTERFACES
+declare TF_WORK_DIR='.'
 
 function usage {
     echo "usage: $programname [-ipavro]"
@@ -73,6 +75,10 @@ check_svc_vars() {
 read_input() {
     while [[ $# -gt 0 ]]; do
         case $1 in
+            -br|--buildregion)
+                TF_PHASE_BUILDREGION="true"
+                shift 1
+                ;;
             -i|--init) 
                 TF_CMD="init"
                 shift 1
@@ -117,9 +123,13 @@ read_input() {
     done
 }
 
+declare TF_RESULT=0
 run_tf_cmd() {
     tfvarfile=$1
     tfplanoutputfile=$2
+    cd $TF_WORK_DIR/
+    dir=`pwd`
+    echo "Current workdir: $dir"
     echo "===Runnning terraform $TF_CMD script==="
     case "$TF_CMD" in
         "destroy") terraform destroy  -auto-approve -var-file=$tfvarfile ;;
@@ -127,14 +137,22 @@ run_tf_cmd() {
         "init") terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region" ;;
         "plan") terraform plan -var-file=$tfvarfile -out $tfplanoutputfile ;;
         "refresh") terraform refresh -var-file=$tfvarfile ;;
-        "apply") terraform apply -auto-approve $tfplanoutputfile ;;
+        "apply") 
+            terraform apply -auto-approve $tfplanoutputfile 
+            TF_RESULT=$?        
+        ;;
         "output") get_tf_output ;;
         *)
             terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region"
             terraform plan -var-file=$tfvarfile -out $tfplanoutputfile
             terraform apply -auto-approve $tfplanoutputfile
+            TF_RESULT=$?
         ;;
     esac
+    if [[ $TF_CMD == "apply" && $TF_RESULT == 0 ]];then
+        echo "Nuking .terraform as apply step succeded"    
+        rm -rf .terraform *.tfplan *.log .terraform.lock.hcl
+    fi
 }
 
 get_tf_output() {
@@ -159,7 +177,53 @@ get_backend_info() {
     # get backend info
     TF_VAR_tf_backend_bucket=`jq -r '.tf_backend_bucket' $TF_VAR_FILE_NAME`
     TF_VAR_tf_region=`jq -r '.aws_region' $TF_VAR_FILE_NAME`
+    TF_VAR_tf_build_region=`jq -r '.build_region' $TF_VAR_FILE_NAME`
 }
+
+retVal=0
+check_bucket_exists() {
+    bucket_name="$1"
+    account="$2"
+    retVal=0
+    echo "Checking if backend bucket $bucket_name exists"
+    set +e
+    res=`aws s3api head-bucket --bucket $bucket_name 2>&1`
+    set -e
+    if [[ $res == *"An error occurred (404) when calling the HeadBucket operation: Not Found"* ]];then
+        retVal=1
+    fi
+}
+create_backend_bucket() {
+    bucket_name="$1"
+    region="$2"
+    account="$3"
+    
+    check_bucket_exists $bucket_name $account
+
+    if [ "$retVal" == 1 ];then
+        echo "Creating backend bucket $bucket_name in region: $region"
+        aws s3api create-bucket --bucket $bucket_name --create-bucket-configuration LocationConstraint=$region
+        aws s3api put-public-access-block --bucket $bucket_name \
+            --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+        #wait after creation 
+        echo "Waiting for bucket $bucket_name in region: $region"
+        aws s3api wait bucket-exists \
+            --bucket "$bucket_name" \
+            --expected-bucket-owner "$account" 
+    fi
+}
+
+merge_default_values() {
+    override_json=$1
+    if  [ -e $override_json ];then
+        default_file_name="./default.tfvars.json"
+        jq -s '.[0] * .[1]' $default_file_name $override_json > provision.tfvars.json
+    else
+        echo "Please add file $override_json"
+        exit 1
+    fi
+}
+
 
 main() {
     
@@ -167,27 +231,42 @@ main() {
 
     read_input "$@"
 
+    merge_default_values "setup.tfvars.json"
+
     check_svc_vars
     
     get_backend_info
   
-    get_consumer_svc_pkg
-
-    echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
-
-    run_tf_cmd "$TF_VAR_FILE_NAME" "consumer_infra.tfplan"
-
-    get_tf_output
-    
-    if [ "$TF_PHASE_INTERFACES" == 'true' ];then
-        TF_CMD="all"
-        cd interface
-        echo "Creating interfaces"
-        TF_VAR_FILE_NAME="interface.tfvars.json"
-        TF_VAR_tf_state_key="consumerinterface.tfstate"  
+    create_backend_bucket $TF_VAR_tf_backend_bucket $TF_VAR_tf_region $user_aws_account_id
+  
+    if [ "$TF_PHASE_BUILDREGION" == 'true' ];then
+        TF_WORK_DIR="./build_region"
+        echo "Creating resources for $TF_VAR_tf_build_region"
+        TF_VAR_FILE_NAME="../provision.tfvars.json"
+        TF_VAR_tf_state_key="consumerbuilds-$TF_VAR_tf_build_region.tfstate"  
         echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
-        run_tf_cmd "$TF_VAR_FILE_NAME" "interfaces_infra.tfplan"
+        run_tf_cmd "$TF_VAR_FILE_NAME" "builds-$TF_VAR_tf_build_region.tfplan"
+    else
+        
+        get_consumer_svc_pkg
+
+        echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
+
+        run_tf_cmd "$TF_VAR_FILE_NAME" "consumer_infra.tfplan"
+
+        get_tf_output
+
+        if [ "$TF_PHASE_INTERFACES" == 'true' ];then
+            TF_CMD="all"
+            TF_WORK_DIR='./interface'
+            echo "Creating interfaces"
+            TF_VAR_FILE_NAME="./interface.tfvars.json"
+            TF_VAR_tf_state_key="consumerinterface.tfstate"  
+            echo "Using Bucket:$TF_VAR_tf_backend_bucket,Region:$TF_VAR_tf_region,State:$TF_VAR_tf_state_key"
+            run_tf_cmd "$TF_VAR_FILE_NAME" "interfaces_infra.tfplan"
+        fi
     fi
+
 }
 
 main "$@" 

@@ -10,11 +10,15 @@ terraform {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-variable "kms_key_alias_name" {}
+provider "aws" {
+  region = var.build_region
+}
 
+variable "kms_key_alias_name" {}
+variable "build_region" {}
 data "template_file" "kms_policy" {
-  template = templatefile("${path.root}/policies/kms_policy.tmpl", {
-    aws_region = data.aws_region.current.name
+  template = templatefile("../policies/kms_policy.tmpl", {
+    aws_region = var.build_region
     aws_account_id = data.aws_caller_identity.current.account_id
   })
 }
