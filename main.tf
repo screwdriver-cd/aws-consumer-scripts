@@ -67,6 +67,7 @@ module "ecr" {
   ecr_name                    = var.ecr_name
   consumer_role_arn           = var.consumer_role_arn
   build_region                = var.aws_region
+  account_id                  = var.user_aws_account_id
 }
 
 module "build_service_role" {
