@@ -149,10 +149,10 @@ run_tf_cmd() {
             TF_RESULT=$?
         ;;
     esac
-    if [[ $TF_CMD == "apply" && $TF_RESULT == 0 ]];then
-        echo "Nuking .terraform as apply step succeded"    
-        rm -rf .terraform *.tfplan *.log .terraform.lock.hcl
-    fi
+    # if [[ $TF_CMD == "apply" && $TF_RESULT == 0 ]];then
+    #     echo "Nuking .terraform as apply step succeded"    
+    #     rm -rf .terraform *.tfplan *.log .terraform.lock.hcl
+    # fi
 }
 
 get_tf_output() {

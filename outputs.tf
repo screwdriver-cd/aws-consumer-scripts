@@ -13,11 +13,17 @@ output "vpc_id" {
   value       = module.vpc.id
 }
 
-output "tags" {
-  description = "Tags"
-  value       = var.tags
-}
 output "route53_zone_name" {
   description = "Route53 Zone Name"
   value       = var.route53_zone_name
+}
+
+output "sd_broker_endpointsvc_map" {
+  description = "Screwdriver Broker Endpoint Map"
+  value       = var.sd_broker_endpointsvc_map
+}
+
+output "aws_region" {
+  description = "Screwdriver Consumer Region"
+  value       = var.aws_region
 }
