@@ -175,7 +175,7 @@ Don't delete the state files in between the process
 ```sh
 ./setup.sh -i
 ``` 
-You can also run validation to check for errors before running `plan` and after running `apply` by using
+You can also run validation to check for errors before running `plan|apply` and after running `init` by using
 the `-v` flag
 ```sh
 ./setup.sh -v
