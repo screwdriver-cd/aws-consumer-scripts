@@ -1,13 +1,10 @@
 {
     "user_aws_account_id": "$user_aws_account_id",
     "tf_backend_bucket": "$user_aws_account_id-aws-integration-tfstate",
-    "sd_broker_endpointsvc_map": {
-        "us-west-2a": ["broker_1", "service_1"],
-        "us-west-2b": ["broker_2", "service_2"]
-    },
-    "sd_broker_secret_arn": "arn:aws:secretsmanager:us-west-2:$user_aws_account_id:secret:some-secret",
+    "sd_broker_endpointsvc_map": $sd_broker_endpointsvc_map,
+    "sd_broker_secret_arn": "$sd_broker_secret_arn",
     "consumer_bucket_name": "screwdriver-consumer-builds-$user_aws_account_id-$build_region",
-    "kms_key_arn": "arn:aws:kms:us-west-2:$user_aws_account_id:key/some-key",
-    "consumer_role_arn": "arn:aws:iam::$user_aws_account_id:role/build-role-name",
+    "kms_key_arn": "$kms_key_arn",
+    "consumer_role_arn": "$consumer_role_arn",
     "kafka_topic": "builds-$user_aws_account_id-usw2"
 }
