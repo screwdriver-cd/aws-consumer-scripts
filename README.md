@@ -153,7 +153,7 @@ Manually in AWS Console or using `aws cli`
 
 ## Instructions
 Git clone this repository [aws-consumer-service](https://github.com/screwdriver-cd/aws-consumer-service).
-To get started, we need to update the var file with the required details. Please refer to [`setup.tfvars.json.tmpl`](./setup.tfvars.json.tmpl) and [`default.tfvars.json`](./default.tfvars.json) for the variables list and configuration definition for information on each argument. Rename file to `setup.tfvars.json`. Following the naming convention as per the template is recommended. This file also serves as the override for all default values in [`default.tfvars.json`](./default.tfvars.json). If you wish to override vpc creation, role creation and other settings from default, based on your environment you can specify in the setup.tfvars.json file and the script will refer to the new values.
+To get started, we need to update the var file with the required details. Please refer to [`setup.tfvars.json`](./setup.tfvars.json) and [`default.tfvars.json`](./default.tfvars.json) for the variables list and configuration definition for information on each argument. Following the naming convention as per the template is recommended. This file also serves as the override for all default values in [`default.tfvars.json`](./default.tfvars.json). If you wish to override vpc creation, role creation and other settings from default, based on your environment you can specify in the setup.tfvars.json file and the script will refer to the new values.
 
 Second, configure the AWS CLI by running `aws configure` with your AWS credentials and select profile for the desired account.
 ```
@@ -191,7 +191,7 @@ the `-v` flag
 ./setup.sh -a
 ```
 
-- Step 5: Rename file [`interface.tfvars.json.tmpl`](./interface/interface.tfvars.json.tmpl) to `interface.tfvars.json`. The previous step produces the output for `vpc_id`, `security_group_id`, `private_subnets`, `route53_zone_name`. Using this information and information from `Step 1`, update the tfvars file.
+- Step 5: Update file [`interface.tfvars.json`](./interface/interface.tfvars.json). The previous step produces the output for `vpc_id`, `security_group_id`, `private_subnets`, `route53_zone_name`. Using this information and information from `Step 1`, update the tfvars file.
 
 - Step 6: The service is already created and we need to provision the interface to connect to Screwdriver Endpoint. Run the following. 
 ```sh
