@@ -22,6 +22,7 @@ resource "aws_ecr_repository" "sd_consumer_ecr" {
   image_tag_mutability = "MUTABLE"
 }
 resource "aws_ecr_repository_policy" "ecrpolicy" {
+  count = var.create_ecr ? 1 : 0
   depends_on = [
     aws_ecr_repository.sd_consumer_ecr
   ]
