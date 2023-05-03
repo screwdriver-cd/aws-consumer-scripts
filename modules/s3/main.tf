@@ -31,11 +31,12 @@ locals {
 module "build_artifact_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
   bucket = var.bucket_name
-  acl    = "private"
   block_public_acls = true
   block_public_policy = true
   ignore_public_acls = true
   restrict_public_buckets = true
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
 
   versioning = {
     enabled = false
