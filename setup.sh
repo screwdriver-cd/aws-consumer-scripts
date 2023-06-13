@@ -134,7 +134,7 @@ run_tf_cmd() {
     case "$TF_CMD" in
         "destroy") terraform destroy  -auto-approve -var-file=$tfvarfile ;;
         "validate") terraform validate ;;
-        "init") terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region" ;;
+        "init") terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region" -upgrade;;
         "plan") terraform plan -var-file=$tfvarfile -out $tfplanoutputfile ;;
         "refresh") terraform refresh -var-file=$tfvarfile ;;
         "apply") 

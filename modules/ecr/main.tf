@@ -19,7 +19,10 @@ variable "account_id" {}
 resource "aws_ecr_repository" "sd_consumer_ecr" {
   count = var.create_ecr ? 1 : 0
   name                 = var.ecr_name
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
 resource "aws_ecr_repository_policy" "ecrpolicy" {
   count = var.create_ecr ? 1 : 0
