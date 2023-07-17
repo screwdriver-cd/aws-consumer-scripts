@@ -17,9 +17,17 @@ provider "aws" {
 variable "kms_key_alias_name" {}
 variable "build_region" {}
 
-resource "aws_kms_key" "sd_build_kms_key" {
-  description = "KSM Key for Screwdriver Builds"
-  enable_key_rotation = true
+# Retrieve key ID associated with the alias
+data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
+  name = "alias/${var.kms_key_alias_name}"
+  ignore_errors   = true
+}
+
+# Create new KMS key if it doesn't exist
+resource "aws_kms_key" "new_sd_build_kms_key" {
+  count                = data.aws_kms_alias.existing_sd_build_kms_key_alias.key_id == "" ? 1 : 0
+  description          = "KMS Key for Screwdriver Builds"
+  enable_key_rotation  = true
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -59,7 +67,14 @@ resource "aws_kms_key" "sd_build_kms_key" {
 EOF
 }
 
+# Determine which KMS key to use
+locals {
+  sd_build_kms_key_id = coalesce(data.aws_kms_alias.existing_sd_build_kms_key_alias.key_id, aws_kms_key.new_sd_build_kms_key.*.key_id)
+}
+
+
+# Create alias for the KMS key
 resource "aws_kms_alias" "sd_build_kms_key_alias" {
   name          = "alias/${var.kms_key_alias_name}"
-  target_key_id = aws_kms_key.sd_build_kms_key.key_id
+  target_key_id = local.sd_build_kms_key_id
 }
