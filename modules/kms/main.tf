@@ -20,7 +20,6 @@ variable "build_region" {}
 # Retrieve key ID associated with the alias
 data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
   name = "alias/${var.kms_key_alias_name}"
-  ignore_errors   = true
 }
 
 # Create new KMS key if it doesn't exist
