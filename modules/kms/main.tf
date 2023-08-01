@@ -24,7 +24,7 @@ data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
 
 # Create new KMS key if it doesn't exist
 resource "aws_kms_key" "new_sd_build_kms_key" {
-  count                = data.aws_kms_alias.existing_sd_build_kms_key_alias.arn == "" ? 1 : 0
+  count                = data.aws_kms_alias.existing_sd_build_kms_key_alias.target_key_id == "" ? 1 : 0
   description          = "KMS Key for Screwdriver Builds"
   enable_key_rotation  = true
   policy = <<EOF
@@ -68,7 +68,7 @@ EOF
 
 # Determine which KMS key to use
 locals {
-  sd_build_kms_key_id = coalesce(data.aws_kms_alias.existing_sd_build_kms_key_alias.arn, aws_kms_key.new_sd_build_kms_key.*.key_id)
+  sd_build_kms_key_id = coalesce(data.aws_kms_alias.existing_sd_build_kms_key_alias.target_key_id, aws_kms_key.new_sd_build_kms_key.*.key_id)
 }
 
 
