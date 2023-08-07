@@ -27,15 +27,15 @@ data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
 }
 
 locals {
-  existing_sd_build_kms_key_id = data.aws_kms_alias.existing_sd_build_kms_key_alias.result["key_id"]
+  existing_sd_build_kms_key_id = trimspace(data.aws_kms_alias.existing_sd_build_kms_key_alias.result["key_id"])
 }
 
 # Create new KMS key if it doesn't exist
 resource "aws_kms_key" "new_sd_build_kms_key" {
-  count                = local.existing_sd_build_kms_key_id == "" ? 1 : 0
-  description          = "KMS Key for Screwdriver Builds"
-  enable_key_rotation  = true
-  policy = <<EOF
+  count               = local.existing_sd_build_kms_key_id == "" ? 1 : 0
+  description         = "KMS Key for Screwdriver Builds"
+  enable_key_rotation = true
+  policy              = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -76,12 +76,13 @@ EOF
 
 # Determine which KMS key to use
 locals {
-  sd_build_kms_key_id = coalesce(local.existing_sd_build_kms_key_id, aws_kms_key.new_sd_build_kms_key.*.key_id)
+  sd_build_kms_key_id = local.existing_sd_build_kms_key_id != "" ? local.existing_sd_build_kms_key_id : aws_kms_key.new_sd_build_kms_key.*.key_id
 }
 
 
 # Create alias for the KMS key
 resource "aws_kms_alias" "sd_build_kms_key_alias" {
+  count         = local.existing_sd_build_kms_key_id == "" ? 1 : 0
   name          = "alias/${var.kms_key_alias_name}"
   target_key_id = local.sd_build_kms_key_id
 }
