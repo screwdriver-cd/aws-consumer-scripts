@@ -19,12 +19,20 @@ variable "build_region" {}
 
 # Retrieve key ID associated with the alias
 data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
-  name = "alias/${var.kms_key_alias_name}"
+  program = ["bash", "get-kms-key.sh"]
+
+  query = {
+    alias = "alias/${var.kms_key_alias_name}"
+  }
+}
+
+locals {
+  existing_sd_build_kms_key_id = data.aws_kms_alias.existing_sd_build_kms_key_alias.result["key_id"]
 }
 
 # Create new KMS key if it doesn't exist
 resource "aws_kms_key" "new_sd_build_kms_key" {
-  count                = data.aws_kms_alias.existing_sd_build_kms_key_alias.target_key_id == "" ? 1 : 0
+  count                = local.existing_sd_build_kms_key_id == "" ? 1 : 0
   description          = "KMS Key for Screwdriver Builds"
   enable_key_rotation  = true
   policy = <<EOF
@@ -68,7 +76,7 @@ EOF
 
 # Determine which KMS key to use
 locals {
-  sd_build_kms_key_id = coalesce(data.aws_kms_alias.existing_sd_build_kms_key_alias.target_key_id, aws_kms_key.new_sd_build_kms_key.*.key_id)
+  sd_build_kms_key_id = coalesce(local.existing_sd_build_kms_key_id, aws_kms_key.new_sd_build_kms_key.*.key_id)
 }
 
 
