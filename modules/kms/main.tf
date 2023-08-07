@@ -18,7 +18,7 @@ variable "kms_key_alias_name" {}
 variable "build_region" {}
 
 # Retrieve key ID associated with the alias
-data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
+data "external" "existing_sd_build_kms_key_alias" {
   program = ["bash", "get-kms-key.sh"]
 
   query = {
@@ -27,7 +27,7 @@ data "aws_kms_alias" "existing_sd_build_kms_key_alias" {
 }
 
 locals {
-  existing_sd_build_kms_key_id = trimspace(data.aws_kms_alias.existing_sd_build_kms_key_alias.result["key_id"])
+  existing_sd_build_kms_key_id = trimspace(data.external.existing_sd_build_kms_key_alias.result["key_id"])
 }
 
 # Create new KMS key if it doesn't exist
