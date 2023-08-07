@@ -19,7 +19,7 @@ variable "build_region" {}
 
 # Retrieve key ID associated with the alias
 data "external" "existing_sd_build_kms_key_alias" {
-  program = ["bash", "get-kms-key.sh"]
+  program = ["bash", "${path.module}/get-kms-key.sh"]
 
   query = {
     alias = "alias/${var.kms_key_alias_name}"
