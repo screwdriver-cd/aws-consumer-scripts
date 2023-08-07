@@ -76,7 +76,7 @@ EOF
 
 # Determine which KMS key to use
 locals {
-  sd_build_kms_key_id = local.existing_sd_build_kms_key_id != "" ? local.existing_sd_build_kms_key_id : aws_kms_key.new_sd_build_kms_key.*.key_id
+  sd_build_kms_key_id = local.existing_sd_build_kms_key_id != "" ? local.existing_sd_build_kms_key_id : aws_kms_key.new_sd_build_kms_key.0.key_id
 }
 
 
