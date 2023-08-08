@@ -90,7 +90,7 @@ resource "aws_kms_alias" "sd_build_kms_key_alias" {
 
 
 moved {
-  from = module.kms.aws_kms_key.sd_build_kms_key_alias
+  from = module.kms.aws_kms_alias.sd_build_kms_key_alias
   to = module.kms.aws_kms_alias.sd_build_kms_key_alias[0]
 }
 
