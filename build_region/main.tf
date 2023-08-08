@@ -43,3 +43,13 @@ module "kms" {
   kms_key_alias_name = var.sd_build_kms_key_alias
   build_region       = var.build_region
 }
+
+moved {
+  from = module.kms.aws_kms_key.sd_build_kms_key
+  to =  module.kms.aws_kms_key.new_sd_build_kms_key[0]
+}
+
+moved {
+  from = module.kms.aws_kms_alias.sd_build_kms_key_alias
+  to = module.kms.aws_kms_alias.sd_build_kms_key_alias[0]
+}

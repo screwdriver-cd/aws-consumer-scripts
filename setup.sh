@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 CWD=$(dirname ${BASH_SOURCE})
-
+export TF_LOG=DEBUG
 declare TF_CMD
 declare TF_VAR_FILE_NAME="./provision.tfvars.json"
 declare TF_VAR_tf_backend_bucket
