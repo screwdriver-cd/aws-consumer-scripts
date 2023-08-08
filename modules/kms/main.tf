@@ -23,6 +23,7 @@ data "external" "existing_sd_build_kms_key_alias" {
 
   query = {
     alias = "alias/${var.kms_key_alias_name}"
+    region = var.build_region
   }
 }
 
@@ -85,4 +86,15 @@ resource "aws_kms_alias" "sd_build_kms_key_alias" {
   count         = local.existing_sd_build_kms_key_id == "" ? 1 : 0
   name          = "alias/${var.kms_key_alias_name}"
   target_key_id = local.sd_build_kms_key_id
+}
+
+
+moved {
+  from = module.kms.aws_kms_key.sd_build_kms_key_alias
+  to = module.kms.aws_kms_alias.sd_build_kms_key_alias[0]
+}
+
+moved {
+  from = module.kms.aws_kms_key.sd_build_kms_key
+  to =  module.kms.aws_kms_key.new_sd_build_kms_key[0]
 }
