@@ -23,6 +23,7 @@ data "external" "existing_sd_build_kms_key_alias" {
 
   query = {
     alias = "alias/${var.kms_key_alias_name}"
+    region = var.build_region
   }
 }
 
@@ -31,7 +32,7 @@ locals {
 }
 
 # Create new KMS key if it doesn't exist
-resource "aws_kms_key" "new_sd_build_kms_key" {
+resource "aws_kms_key" "sd_build_kms_key" {
   count               = local.existing_sd_build_kms_key_id == "" ? 1 : 0
   description         = "KMS Key for Screwdriver Builds"
   enable_key_rotation = true
@@ -76,7 +77,7 @@ EOF
 
 # Determine which KMS key to use
 locals {
-  sd_build_kms_key_id = local.existing_sd_build_kms_key_id != "" ? local.existing_sd_build_kms_key_id : aws_kms_key.new_sd_build_kms_key.0.key_id
+  sd_build_kms_key_id = local.existing_sd_build_kms_key_id != "" ? local.existing_sd_build_kms_key_id : aws_kms_key.sd_build_kms_key.0.key_id
 }
 
 
