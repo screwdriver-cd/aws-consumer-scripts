@@ -137,6 +137,7 @@ run_tf_cmd() {
         "init") terraform init -backend-config "bucket=$TF_VAR_tf_backend_bucket" -backend-config "key=$TF_VAR_tf_state_key" -backend-config "region=$TF_VAR_tf_region" -upgrade;;
         "plan")
             terraform state list
+            aws kms delete-alias --alias-name alias/screwdriver-builds-key
             terraform plan -var-file=$tfvarfile -out $tfplanoutputfile 
         ;;
         "refresh") terraform refresh -var-file=$tfvarfile ;;
