@@ -1,5 +1,5 @@
 {
-  aws-consumer-scripts/policies/lambda_vpc_access_policy.json  "Version": "2012-10-17",
+  "Version": "2012-10-17",
   "Statement": [
     {
       "Sid": "SidVPCAccess",
