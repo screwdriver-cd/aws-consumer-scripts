@@ -28,6 +28,7 @@
     {
       "Sid": "SidIamAccess",
       "Action": "iam:PassRole",
+      "Effect": "Allow",
       "Resource": "*",
       "Condition": {
         "StringEquals": {
