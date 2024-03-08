@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -29,7 +29,6 @@ variable "sd_broker_secret_arn" {}
 
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
-  version = "4.17.0"
 
   function_name          = var.consumer_fn_name
   description            = "Screwdriver AWS Integration Consumer"

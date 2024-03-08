@@ -2,7 +2,6 @@
 
 module "aws_util" {
   source  = "cloudposse/utils/aws"
-  version     = "0.8.1"
 }
 
 locals {

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -18,7 +18,7 @@ variable "build_region" {}
 
 module "aws_util" {
   source  = "cloudposse/utils/aws"
-  version     = "0.8.1"
+  version     = "1.4.0"
 }
 
 locals {
