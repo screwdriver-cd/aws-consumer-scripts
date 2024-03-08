@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -17,7 +17,6 @@ provider "aws" {
 
 module "consumer_fn_sg" {
   source = "terraform-aws-modules/security-group/aws"
-  version = "4.17.2"
 
   name        = "${var.security_group_prefix}-sg"
   description = "Security group for ${var.security_group_prefix} with custom ports open within VPC"
