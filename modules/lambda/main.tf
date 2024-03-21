@@ -32,11 +32,11 @@ module "lambda_function" {
 
   function_name          = var.consumer_fn_name
   description            = "Screwdriver AWS Integration Consumer"
-  handler                = "aws-consumer-service"
-  runtime                = "go1.x"
+  handler                = "bootstrap"
+  runtime                = "provided.al2023"
   create_package         = true
   create_role            = false
-  source_path            = "./lambda/aws-consumer-service"
+  source_path            = "./lambda/bootstrap"
   vpc_subnet_ids         = var.private_subnets
   vpc_security_group_ids = [var.security_group_id]
   memory_size            = "128"

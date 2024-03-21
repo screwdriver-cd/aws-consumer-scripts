@@ -162,13 +162,13 @@ get_tf_output() {
 
 get_consumer_svc_pkg() {
     printf "===Getting screwdriver consumer-service package===\n"
-    if [ ! -f "lambda/aws-consumer-service" ];then
+    if [ ! -f "lambda/bootstrap" ];then
         mkdir -p lambda
         cd lambda
         wget -q -O - https://api.github.com/repos/screwdriver-cd/aws-consumer-service/releases/latest \
         | egrep -o "/screwdriver-cd/aws-consumer-service/releases/download/v[0-9.]*/aws-consumer-service_linux_amd64" \
-        | wget --base=http://github.com/ -i - -O aws-consumer-service
-        chmod +x ./aws-consumer-service
+        | wget --base=http://github.com/ -i - -O bootstrap
+        chmod +x ./bootstrap
         cd ..
     fi
 }
