@@ -36,7 +36,8 @@
             "iam.amazonaws.com",
             "cloudwatch.amazonaws.com",
             "ec2.amazonaws.com",
-            "logs.amazonaws.com"
+            "logs.amazonaws.com",
+            "codebuild.amazonaws.com"
           ]
         }
       }
