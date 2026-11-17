@@ -29,6 +29,7 @@ variable "sd_broker_secret_arn" {}
 
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
+  version = "~> 7.20"
 
   function_name          = var.consumer_fn_name
   description            = "Screwdriver AWS Integration Consumer"
