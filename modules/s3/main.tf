@@ -30,6 +30,7 @@ locals {
 
 module "build_artifact_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 4.11"
   bucket = var.bucket_name
   block_public_acls = true
   block_public_policy = true
